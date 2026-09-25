@@ -24,6 +24,7 @@ async function run() {
     const service = core.getInput('service', { required: true });
     const cluster = core.getInput('cluster', { required: true });
     const waitForStopped = core.getInput('wait-for-stopped', { required: false });
+    const capacityProviderStrategy = core.getInput('capacity-provider-strategy', { required: false });
 
     // Fetch the configuration from a service
     core.debug('Fetch the configuration');
@@ -39,15 +40,19 @@ async function run() {
     }
     const serviceResponse = describeResponse.services[0];
 
+    // capacityProviderStrategy and launchType cannot be specified together
+    const placement = capacityProviderStrategy
+      ? { capacityProviderStrategy: JSON.parse(capacityProviderStrategy) }
+      : { capacityProviderStrategy: serviceResponse.capacityProviderStrategy, launchType: serviceResponse.launchType };
+
     // Starts a new task
     let taskResponse;
     try {
       const commandList = parseCommand(command);
       taskResponse = await ecs.send(new RunTaskCommand({
-        capacityProviderStrategy: serviceResponse.capacityProviderStrategy,
+        ...placement,
         cluster: cluster,
         taskDefinition: taskDefinition,
-        launchType: serviceResponse.launchType,
         networkConfiguration: serviceResponse.networkConfiguration,
         overrides: {
           containerOverrides: [

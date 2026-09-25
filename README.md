@@ -28,6 +28,8 @@ Marketplaceに登録していないので、checkoutして利用してくださ�
         service: my-service
         cluster: my-cluster
         wait-for-stopped: true
+        # 省略時はサービスの設定を引き継ぐ。サービスが FARGATE_SPOT でも、マイグレーション等を Spot の中断から守りたいときに指定する
+        capacity-provider-strategy: '[{"capacityProvider":"FARGATE","weight":1}]'
 ```
 
 See [action.yml](action.yml) for the full documentation for this action's inputs and outputs.
