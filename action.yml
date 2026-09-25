@@ -23,6 +23,9 @@ inputs:
   wait-for-stopped:
     description: 'Whether to wait for the ECS task to stopped state after starting the new task. Valid value is "true". Will default to not waiting.'
     required: false
+  capacity-provider-strategy:
+    description: 'The capacity provider strategy to run the task with, in JSON (e.g. [{"capacityProvider":"FARGATE","weight":1}]). Defaults to the ECS service configuration.'
+    required: false
 outputs:
   task-arn:
     description: 'The ARN of the started ECS task'

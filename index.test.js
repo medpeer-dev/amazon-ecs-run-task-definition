@@ -151,6 +151,32 @@ describe('Run a task', () => {
         expect(core.info).toBeCalledWith("Task started. Watch this task's details in the Amazon ECS console: https://console.aws.amazon.com/ecs/home?fake-region#/clusters/cluster-789/tasks/01234-abcd/details");
     });
 
+    test('run a task with the given capacity provider strategy instead of the service configuration', async () => {
+        core.getInput = jest
+            .fn()
+            .mockReturnValueOnce('task:1')                   // task-definition
+            .mockReturnValueOnce('container-123')            // container
+            .mockReturnValueOnce('["echo", "Hello, World"]') // command
+            .mockReturnValueOnce('service-456')              // service
+            .mockReturnValueOnce('cluster-789')              // cluster
+            .mockReturnValueOnce('')                         // wait-for-stopped
+            .mockReturnValueOnce('[{"capacityProvider":"FARGATE","weight":1}]'); // capacity-provider-strategy
+
+        await run();
+
+        expect(core.setFailed).toHaveBeenCalledTimes(0);
+        const input = RunTaskCommand.mock.calls[0][0];
+        expect(input.capacityProviderStrategy).toEqual([{ capacityProvider: 'FARGATE', weight: 1 }]);
+        expect(input).not.toHaveProperty('launchType');
+        expect(input.networkConfiguration).toEqual({
+            awsvpcConfiguration: {
+                subnets: ['subnet-123', 'subnet-456'],
+                assignPublicIp: 'DISABLED',
+                securityGroups: ['sg-123']
+            }
+        });
+    });
+
     test('run a task, but failed', async () => {
         waitUntilTasksStopped.mockResolvedValue({ state: 'SUCCESS' });
 
