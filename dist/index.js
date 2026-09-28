@@ -5,8 +5,7 @@
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 const core = __nccwpck_require__(7484);
-const { ECSClient, DescribeServicesCommand, RunTaskCommand, DescribeTasksCommand } = __nccwpck_require__(212);
-const { waitUntilTasksStopped } = __nccwpck_require__(212);
+const { ECSClient, DescribeServicesCommand, RunTaskCommand, DescribeTasksCommand, waitUntilTasksStopped } = __nccwpck_require__(212);
 
 function parseCommand(command) {
   // for backwards compatibility
@@ -31,6 +30,7 @@ async function run() {
     const service = core.getInput('service', { required: true });
     const cluster = core.getInput('cluster', { required: true });
     const waitForStopped = core.getInput('wait-for-stopped', { required: false });
+    const capacityProviderStrategy = core.getInput('capacity-provider-strategy', { required: false });
 
     // Fetch the configuration from a service
     core.debug('Fetch the configuration');
@@ -46,15 +46,19 @@ async function run() {
     }
     const serviceResponse = describeResponse.services[0];
 
+    // capacityProviderStrategy and launchType cannot be specified together
+    const placement = capacityProviderStrategy
+      ? { capacityProviderStrategy: JSON.parse(capacityProviderStrategy) }
+      : { capacityProviderStrategy: serviceResponse.capacityProviderStrategy, launchType: serviceResponse.launchType };
+
     // Starts a new task
     let taskResponse;
     try {
       const commandList = parseCommand(command);
       taskResponse = await ecs.send(new RunTaskCommand({
-        capacityProviderStrategy: serviceResponse.capacityProviderStrategy,
+        ...placement,
         cluster: cluster,
         taskDefinition: taskDefinition,
-        launchType: serviceResponse.launchType,
         networkConfiguration: serviceResponse.networkConfiguration,
         overrides: {
           containerOverrides: [
@@ -3317,10 +3321,9 @@ const util_middleware_1 = __nccwpck_require__(6324);
 const defaultECSHttpAuthSchemeParametersProvider = async (config, context, input) => {
     return {
         operation: (0, util_middleware_1.getSmithyContext)(context).operation,
-        region: (await (0, util_middleware_1.normalizeProvider)(config.region)()) ||
-            (() => {
-                throw new Error("expected `region` to be configured for `aws.auth#sigv4`");
-            })(),
+        region: await (0, util_middleware_1.normalizeProvider)(config.region)() || (() => {
+            throw new Error("expected `region` to be configured for `aws.auth#sigv4`");
+        })(),
     };
 };
 exports.defaultECSHttpAuthSchemeParametersProvider = defaultECSHttpAuthSchemeParametersProvider;
@@ -4512,6 +4515,7 @@ const _f = "force";
 const _fA = "finishedAt";
 const _fC = "firelensConfiguration";
 const _fCa = "failureCount";
+const _fE = "fipsEnabled";
 const _fES = "fargateEphemeralStorage";
 const _fESKKI = "fargateEphemeralStorageKmsKeyId";
 const _fND = "forceNewDeployment";
@@ -4855,2579 +4859,2086 @@ const _wD = "workingDirectory";
 const _xN = "xmlName";
 const n0 = "com.amazonaws.ecs";
 var SensitiveString = [0, n0, _SS, 8, 0];
-var AcceleratorCountRequest$ = [3, n0, _ACR, 0, [_m, _ma], [1, 1]];
-var AcceleratorTotalMemoryMiBRequest$ = [3, n0, _ATMMBR, 0, [_m, _ma], [1, 1]];
-var AccessDeniedException$ = [-3, n0, _ADE, { [_e]: _c }, [_me], [0]];
-schema.TypeRegistry.for(n0).registerError(AccessDeniedException$, AccessDeniedException);
-var AdvancedConfiguration$ = [3, n0, _AC, 0, [_aTGA, _pLR, _tLR, _rA], [0, 0, 0, 0]];
-var Attachment$ = [3, n0, _A, 0, [_i, _t, _s, _d], [0, 0, 0, () => AttachmentDetails]];
-var AttachmentStateChange$ = [3, n0, _ASC, 0, [_aA, _s], [0, 0]];
-var Attribute$ = [3, n0, _At, 0, [_n, _v, _tT, _tI], [0, 0, 0, 0]];
-var AttributeLimitExceededException$ = [-3, n0, _ALEE, { [_e]: _c }, [_me], [0]];
-schema.TypeRegistry.for(n0).registerError(AttributeLimitExceededException$, AttributeLimitExceededException);
-var AutoScalingGroupProvider$ = [
-    3,
-    n0,
-    _ASGP,
+var AcceleratorCountRequest$ = [3, n0, _ACR,
     0,
-    [_aSGA, _mS, _mTP, _mD],
-    [0, () => ManagedScaling$, 0, 0],
+    [_m, _ma],
+    [1, 1]
 ];
-var AutoScalingGroupProviderUpdate$ = [
-    3,
-    n0,
-    _ASGPU,
+var AcceleratorTotalMemoryMiBRequest$ = [3, n0, _ATMMBR,
     0,
-    [_mS, _mTP, _mD],
-    [() => ManagedScaling$, 0, 0],
+    [_m, _ma],
+    [1, 1]
 ];
-var AwsVpcConfiguration$ = [3, n0, _AVC, 0, [_su, _sG, _aPI], [64 | 0, 64 | 0, 0]];
-var BaselineEbsBandwidthMbpsRequest$ = [3, n0, _BEBMR, 0, [_m, _ma], [1, 1]];
-var BlockedException$ = [-3, n0, _BE, { [_e]: _c }, [_me], [0]];
-schema.TypeRegistry.for(n0).registerError(BlockedException$, BlockedException);
-var CanaryConfiguration$ = [3, n0, _CC, 0, [_cP, _cBTIM], [1, 1]];
-var CapacityProvider$ = [
-    3,
-    n0,
-    _CP,
-    0,
-    [_cPA, _n, _cl, _s, _aSGP, _mIP, _uS, _uSR, _ta, _t],
-    [0, 0, 0, 0, () => AutoScalingGroupProvider$, [() => ManagedInstancesProvider$, 0], 0, 0, () => Tags, 0],
-];
-var CapacityProviderStrategyItem$ = [3, n0, _CPSI, 0, [_cPa, _w, _b], [0, 1, 1]];
-var ClientException$ = [-3, n0, _CE, { [_e]: _c }, [_me], [0]];
-schema.TypeRegistry.for(n0).registerError(ClientException$, ClientException);
-var Cluster$ = [
-    3,
-    n0,
-    _C,
-    0,
-    [_cA, _cN, _co, _s, _rCIC, _rTC, _pTC, _aSC, _st, _ta, _se, _cPap, _dCPS, _a, _aS, _sCD],
-    [
-        0,
-        0,
-        () => ClusterConfiguration$,
-        0,
-        1,
-        1,
-        1,
-        1,
-        () => Statistics,
-        () => Tags,
-        () => ClusterSettings,
-        64 | 0,
-        () => CapacityProviderStrategy,
-        () => Attachments,
-        0,
-        () => ClusterServiceConnectDefaults$,
-    ],
-];
-var ClusterConfiguration$ = [
-    3,
-    n0,
-    _CCl,
-    0,
-    [_eCC, _mSC],
-    [() => ExecuteCommandConfiguration$, () => ManagedStorageConfiguration$],
-];
-var ClusterContainsCapacityProviderException$ = [-3, n0, _CCCPE, { [_e]: _c }, [_me], [0]];
-schema.TypeRegistry.for(n0).registerError(ClusterContainsCapacityProviderException$, ClusterContainsCapacityProviderException);
-var ClusterContainsContainerInstancesException$ = [-3, n0, _CCCIE, { [_e]: _c }, [_me], [0]];
-schema.TypeRegistry.for(n0).registerError(ClusterContainsContainerInstancesException$, ClusterContainsContainerInstancesException);
-var ClusterContainsServicesException$ = [-3, n0, _CCSE, { [_e]: _c }, [_me], [0]];
-schema.TypeRegistry.for(n0).registerError(ClusterContainsServicesException$, ClusterContainsServicesException);
-var ClusterContainsTasksException$ = [-3, n0, _CCTE, { [_e]: _c }, [_me], [0]];
-schema.TypeRegistry.for(n0).registerError(ClusterContainsTasksException$, ClusterContainsTasksException);
-var ClusterNotFoundException$ = [-3, n0, _CNFE, { [_e]: _c }, [_me], [0]];
-schema.TypeRegistry.for(n0).registerError(ClusterNotFoundException$, ClusterNotFoundException);
-var ClusterServiceConnectDefaults$ = [3, n0, _CSCD, 0, [_na], [0]];
-var ClusterServiceConnectDefaultsRequest$ = [3, n0, _CSCDR, 0, [_na], [0]];
-var ClusterSetting$ = [3, n0, _CS, 0, [_n, _v], [0, 0]];
-var ConflictException$ = [-3, n0, _CEo, { [_e]: _c }, [_rI, _me], [64 | 0, 0]];
-schema.TypeRegistry.for(n0).registerError(ConflictException$, ConflictException);
-var Container$ = [
-    3,
-    n0,
-    _Co,
-    0,
-    [_cAo, _tA, _n, _im, _iD, _rIu, _lS, _eC, _r, _nB, _nI, _hS, _mA, _cp, _mem, _mR, _gI],
-    [0, 0, 0, 0, 0, 0, 0, 1, 0, () => NetworkBindings, () => NetworkInterfaces, 0, () => ManagedAgents, 0, 0, 0, 64 | 0],
-];
-var ContainerDefinition$ = [
-    3,
-    n0,
-    _CD,
-    0,
-    [
-        _n,
-        _im,
-        _rC,
-        _cp,
-        _mem,
-        _mR,
-        _l,
-        _pM,
-        _es,
-        _rP,
-        _eP,
-        _com,
-        _en,
-        _eF,
-        _mP,
-        _vF,
-        _lP,
-        _sec,
-        _dO,
-        _sT,
-        _sTt,
-        _vC,
-        _h,
-        _u,
-        _wD,
-        _dN,
-        _p,
-        _rRF,
-        _dS,
-        _dSD,
-        _eH,
-        _dSO,
-        _in,
-        _pT,
-        _dL,
-        _ul,
-        _lC,
-        _hC,
-        _sC,
-        _rR,
-        _fC,
-        _cS,
-    ],
-    [
-        0,
-        0,
-        () => RepositoryCredentials$,
-        1,
-        1,
-        1,
-        64 | 0,
-        () => PortMappingList,
-        2,
-        () => ContainerRestartPolicy$,
-        64 | 0,
-        64 | 0,
-        () => EnvironmentVariables,
-        () => EnvironmentFiles,
-        () => MountPointList,
-        () => VolumeFromList,
-        () => LinuxParameters$,
-        () => SecretList,
-        () => ContainerDependencies,
-        1,
-        1,
-        0,
-        0,
-        0,
-        0,
-        2,
-        2,
-        2,
-        64 | 0,
-        64 | 0,
-        () => HostEntryList,
-        64 | 0,
-        2,
-        2,
-        128 | 0,
-        () => UlimitList,
-        () => LogConfiguration$,
-        () => HealthCheck$,
-        () => SystemControls,
-        () => ResourceRequirements,
-        () => FirelensConfiguration$,
-        64 | 0,
-    ],
-];
-var ContainerDependency$ = [3, n0, _CDo, 0, [_cNo, _con], [0, 0]];
-var ContainerImage$ = [3, n0, _CI, 0, [_cNo, _iD, _im], [0, 0, 0]];
-var ContainerInstance$ = [
-    3,
-    n0,
-    _CIo,
-    0,
-    [_cIA, _eII, _cPN, _ve, _vI, _rRe, _rReg, _s, _sR, _aC, _rTC, _pTC, _aUS, _at, _rAe, _a, _ta, _hS],
-    [
-        0,
-        0,
-        0,
-        1,
-        () => VersionInfo$,
-        () => Resources,
-        () => Resources,
-        0,
-        0,
-        2,
-        1,
-        1,
-        0,
-        () => Attributes,
-        4,
-        () => Attachments,
-        () => Tags,
-        () => ContainerInstanceHealthStatus$,
-    ],
-];
-var ContainerInstanceHealthStatus$ = [
-    3,
-    n0,
-    _CIHS,
-    0,
-    [_oS, _d],
-    [0, () => InstanceHealthCheckResultList],
-];
-var ContainerOverride$ = [
-    3,
-    n0,
-    _CO,
-    0,
-    [_n, _com, _en, _eF, _cp, _mem, _mR, _rR],
-    [0, 64 | 0, () => EnvironmentVariables, () => EnvironmentFiles, 1, 1, 1, () => ResourceRequirements],
-];
-var ContainerRestartPolicy$ = [3, n0, _CRP, 0, [_ena, _iEC, _rAP], [2, 64 | 1, 1]];
-var ContainerStateChange$ = [
-    3,
-    n0,
-    _CSC,
-    0,
-    [_cNo, _iD, _rIu, _eC, _nB, _r, _s],
-    [0, 0, 0, 1, () => NetworkBindings, 0, 0],
-];
-var CreateCapacityProviderRequest$ = [
-    3,
-    n0,
-    _CCPR,
-    0,
-    [_n, _cl, _aSGP, _mIP, _ta],
-    [0, 0, () => AutoScalingGroupProvider$, [() => CreateManagedInstancesProviderConfiguration$, 0], () => Tags],
-];
-var CreateCapacityProviderResponse$ = [
-    3,
-    n0,
-    _CCPRr,
-    0,
-    [_cPa],
-    [[() => CapacityProvider$, 0]],
-];
-var CreateClusterRequest$ = [
-    3,
-    n0,
-    _CCR,
-    0,
-    [_cN, _ta, _se, _co, _cPap, _dCPS, _sCD],
-    [
-        0,
-        () => Tags,
-        () => ClusterSettings,
-        () => ClusterConfiguration$,
-        64 | 0,
-        () => CapacityProviderStrategy,
-        () => ClusterServiceConnectDefaultsRequest$,
-    ],
-];
-var CreateClusterResponse$ = [3, n0, _CCRr, 0, [_cl], [() => Cluster$]];
-var CreatedAt$ = [3, n0, _CA, 0, [_be, _af], [4, 4]];
-var CreateExpressGatewayServiceRequest$ = [
-    3,
-    n0,
-    _CEGSR,
-    0,
-    [_eRA, _iRA, _sN, _cl, _hCP, _pC, _tRA, _nC, _cp, _mem, _sTc, _ta],
-    [
-        0,
-        0,
-        0,
-        0,
-        0,
-        () => ExpressGatewayContainer$,
-        0,
-        () => ExpressGatewayServiceNetworkConfiguration$,
-        0,
-        0,
-        () => ExpressGatewayScalingTarget$,
-        () => Tags,
-    ],
-];
-var CreateExpressGatewayServiceResponse$ = [
-    3,
-    n0,
-    _CEGSRr,
-    0,
-    [_ser],
-    [() => ECSExpressGatewayService$],
-];
-var CreateManagedInstancesProviderConfiguration$ = [
-    3,
-    n0,
-    _CMIPC,
-    0,
-    [_iRA, _iLT, _pTr, _iO],
-    [0, [() => InstanceLaunchTemplate$, 0], 0, () => InfrastructureOptimization$],
-];
-var CreateServiceRequest$ = [
-    3,
-    n0,
-    _CSR,
-    0,
-    [
-        _cl,
-        _sN,
-        _tD,
-        _aZR,
-        _lB,
-        _sRe,
-        _dC,
-        _cT,
-        _lT,
-        _cPS,
-        _pV,
-        _ro,
-        _dCe,
-        _pCl,
-        _pS,
-        _nC,
-        _hCGPS,
-        _sS,
-        _dCep,
-        _ta,
-        _eECSMT,
-        _pTr,
-        _eEC,
-        _sCC,
-        _vCo,
-        _vLC,
-    ],
-    [
-        0,
-        0,
-        0,
-        0,
-        () => LoadBalancers,
-        () => ServiceRegistries,
-        1,
-        0,
-        0,
-        () => CapacityProviderStrategy,
-        0,
-        0,
-        () => DeploymentConfiguration$,
-        () => PlacementConstraints,
-        () => PlacementStrategies,
-        () => NetworkConfiguration$,
-        1,
-        0,
-        () => DeploymentController$,
-        () => Tags,
-        2,
-        0,
-        2,
-        () => ServiceConnectConfiguration$,
-        () => ServiceVolumeConfigurations,
-        () => VpcLatticeConfigurations,
-    ],
-];
-var CreateServiceResponse$ = [3, n0, _CSRr, 0, [_ser], [() => Service$]];
-var CreateTaskSetRequest$ = [
-    3,
-    n0,
-    _CTSR,
-    0,
-    [_ser, _cl, _eI, _tD, _nC, _lB, _sRe, _lT, _cPS, _pV, _sc, _cT, _ta],
-    [
-        0,
-        0,
-        0,
-        0,
-        () => NetworkConfiguration$,
-        () => LoadBalancers,
-        () => ServiceRegistries,
-        0,
-        () => CapacityProviderStrategy,
-        0,
-        () => Scale$,
-        0,
-        () => Tags,
-    ],
-];
-var CreateTaskSetResponse$ = [3, n0, _CTSRr, 0, [_tS], [() => TaskSet$]];
-var DeleteAccountSettingRequest$ = [3, n0, _DASR, 0, [_n, _pA], [0, 0]];
-var DeleteAccountSettingResponse$ = [3, n0, _DASRe, 0, [_set], [() => Setting$]];
-var DeleteAttributesRequest$ = [3, n0, _DAR, 0, [_cl, _at], [0, () => Attributes]];
-var DeleteAttributesResponse$ = [3, n0, _DARe, 0, [_at], [() => Attributes]];
-var DeleteCapacityProviderRequest$ = [3, n0, _DCPR, 0, [_cPa, _cl], [0, 0]];
-var DeleteCapacityProviderResponse$ = [
-    3,
-    n0,
-    _DCPRe,
-    0,
-    [_cPa],
-    [[() => CapacityProvider$, 0]],
-];
-var DeleteClusterRequest$ = [3, n0, _DCR, 0, [_cl], [0]];
-var DeleteClusterResponse$ = [3, n0, _DCRe, 0, [_cl], [() => Cluster$]];
-var DeleteExpressGatewayServiceRequest$ = [3, n0, _DEGSR, 0, [_sA], [0]];
-var DeleteExpressGatewayServiceResponse$ = [
-    3,
-    n0,
-    _DEGSRe,
-    0,
-    [_ser],
-    [() => ECSExpressGatewayService$],
-];
-var DeleteServiceRequest$ = [3, n0, _DSR, 0, [_cl, _ser, _f], [0, 0, 2]];
-var DeleteServiceResponse$ = [3, n0, _DSRe, 0, [_ser], [() => Service$]];
-var DeleteTaskDefinitionsRequest$ = [3, n0, _DTDR, 0, [_tDa], [64 | 0]];
-var DeleteTaskDefinitionsResponse$ = [
-    3,
-    n0,
-    _DTDRe,
-    0,
-    [_tDa, _fa],
-    [() => TaskDefinitionList, () => Failures],
-];
-var DeleteTaskSetRequest$ = [3, n0, _DTSR, 0, [_cl, _ser, _tS, _f], [0, 0, 0, 2]];
-var DeleteTaskSetResponse$ = [3, n0, _DTSRe, 0, [_tS], [() => TaskSet$]];
-var Deployment$ = [
-    3,
-    n0,
-    _D,
-    0,
-    [_i, _s, _tD, _dC, _pCe, _rCu, _fT, _cAr, _uA, _cPS, _lT, _pV, _pF, _nC, _rS, _rSR, _sCC, _sCR, _vCo, _fES, _vLC],
-    [
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        1,
-        4,
-        4,
-        () => CapacityProviderStrategy,
-        0,
-        0,
-        0,
-        () => NetworkConfiguration$,
-        0,
-        0,
-        () => ServiceConnectConfiguration$,
-        () => ServiceConnectServiceResourceList,
-        () => ServiceVolumeConfigurations,
-        () => DeploymentEphemeralStorage$,
-        () => VpcLatticeConfigurations,
-    ],
-];
-var DeploymentAlarms$ = [3, n0, _DA, 0, [_aN, _rol, _enab], [64 | 0, 2, 2]];
-var DeploymentCircuitBreaker$ = [3, n0, _DCB, 0, [_enab, _rol], [2, 2]];
-var DeploymentConfiguration$ = [
-    3,
-    n0,
-    _DC,
-    0,
-    [_dCB, _mPa, _mHP, _al, _str, _bTIM, _lH, _lCi, _cC],
-    [
-        () => DeploymentCircuitBreaker$,
-        1,
-        1,
-        () => DeploymentAlarms$,
-        0,
-        1,
-        () => DeploymentLifecycleHookList,
-        () => LinearConfiguration$,
-        () => CanaryConfiguration$,
-    ],
-];
-var DeploymentController$ = [3, n0, _DCe, 0, [_t], [0]];
-var DeploymentEphemeralStorage$ = [3, n0, _DES, 0, [_kKI], [0]];
-var DeploymentLifecycleHook$ = [
-    3,
-    n0,
-    _DLH,
-    0,
-    [_hTA, _rA, _lSi, _hD],
-    [0, 0, 64 | 0, 15],
-];
-var DeregisterContainerInstanceRequest$ = [3, n0, _DCIR, 0, [_cl, _cI, _f], [0, 0, 2]];
-var DeregisterContainerInstanceResponse$ = [
-    3,
-    n0,
-    _DCIRe,
-    0,
-    [_cI],
-    [() => ContainerInstance$],
-];
-var DeregisterTaskDefinitionRequest$ = [3, n0, _DTDRer, 0, [_tD], [0]];
-var DeregisterTaskDefinitionResponse$ = [
-    3,
-    n0,
-    _DTDRere,
-    0,
-    [_tD],
-    [() => TaskDefinition$],
-];
-var DescribeCapacityProvidersRequest$ = [
-    3,
-    n0,
-    _DCPRes,
-    0,
-    [_cPap, _cl, _inc, _mRa, _nT],
-    [64 | 0, 0, 64 | 0, 1, 0],
-];
-var DescribeCapacityProvidersResponse$ = [
-    3,
-    n0,
-    _DCPResc,
-    0,
-    [_cPap, _fa, _nT],
-    [[() => CapacityProviders, 0], () => Failures, 0],
-];
-var DescribeClustersRequest$ = [3, n0, _DCRes, 0, [_clu, _inc], [64 | 0, 64 | 0]];
-var DescribeClustersResponse$ = [
-    3,
-    n0,
-    _DCResc,
-    0,
-    [_clu, _fa],
-    [() => Clusters, () => Failures],
-];
-var DescribeContainerInstancesRequest$ = [
-    3,
-    n0,
-    _DCIRes,
-    0,
-    [_cl, _cIo, _inc],
-    [0, 64 | 0, 64 | 0],
-];
-var DescribeContainerInstancesResponse$ = [
-    3,
-    n0,
-    _DCIResc,
-    0,
-    [_cIo, _fa],
-    [() => ContainerInstances, () => Failures],
-];
-var DescribeExpressGatewayServiceRequest$ = [
-    3,
-    n0,
-    _DEGSRes,
-    0,
-    [_sA, _inc],
-    [0, 64 | 0],
-];
-var DescribeExpressGatewayServiceResponse$ = [
-    3,
-    n0,
-    _DEGSResc,
-    0,
-    [_ser],
-    [() => ECSExpressGatewayService$],
-];
-var DescribeServiceDeploymentsRequest$ = [3, n0, _DSDR, 0, [_sDA], [64 | 0]];
-var DescribeServiceDeploymentsResponse$ = [
-    3,
-    n0,
-    _DSDRe,
-    0,
-    [_sD, _fa],
-    [() => ServiceDeployments, () => Failures],
-];
-var DescribeServiceRevisionsRequest$ = [3, n0, _DSRR, 0, [_sRA], [64 | 0]];
-var DescribeServiceRevisionsResponse$ = [
-    3,
-    n0,
-    _DSRRe,
-    0,
-    [_sRer, _fa],
-    [() => ServiceRevisions, () => Failures],
-];
-var DescribeServicesRequest$ = [
-    3,
-    n0,
-    _DSRes,
-    0,
-    [_cl, _serv, _inc],
-    [0, 64 | 0, 64 | 0],
-];
-var DescribeServicesResponse$ = [
-    3,
-    n0,
-    _DSResc,
-    0,
-    [_serv, _fa],
-    [() => Services, () => Failures],
-];
-var DescribeTaskDefinitionRequest$ = [3, n0, _DTDRes, 0, [_tD, _inc], [0, 64 | 0]];
-var DescribeTaskDefinitionResponse$ = [
-    3,
-    n0,
-    _DTDResc,
-    0,
-    [_tD, _ta],
-    [() => TaskDefinition$, () => Tags],
-];
-var DescribeTaskSetsRequest$ = [
-    3,
-    n0,
-    _DTSRes,
-    0,
-    [_cl, _ser, _tSa, _inc],
-    [0, 0, 64 | 0, 64 | 0],
-];
-var DescribeTaskSetsResponse$ = [
-    3,
-    n0,
-    _DTSResc,
-    0,
-    [_tSa, _fa],
-    [() => TaskSets, () => Failures],
-];
-var DescribeTasksRequest$ = [3, n0, _DTR, 0, [_cl, _tas, _inc], [0, 64 | 0, 64 | 0]];
-var DescribeTasksResponse$ = [
-    3,
-    n0,
-    _DTRe,
-    0,
-    [_tas, _fa],
-    [() => Tasks, () => Failures],
-];
-var Device$ = [3, n0, _De, 0, [_hP, _cPo, _pe], [0, 0, 64 | 0]];
-var DiscoverPollEndpointRequest$ = [3, n0, _DPER, 0, [_cI, _cl], [0, 0]];
-var DiscoverPollEndpointResponse$ = [3, n0, _DPERi, 0, [_end, _tE, _sCE], [0, 0, 0]];
-var DockerVolumeConfiguration$ = [
-    3,
-    n0,
-    _DVC,
-    0,
-    [_sco, _au, _dr, _dOr, _la],
-    [0, 2, 0, 128 | 0, 128 | 0],
-];
-var EBSTagSpecification$ = [3, n0, _EBSTS, 0, [_rT, _ta, _pTr], [0, () => Tags, 0]];
-var ECSExpressGatewayService$ = [
-    3,
-    n0,
-    _ECSEGS,
-    0,
-    [_cl, _sN, _sA, _iRA, _s, _cD, _aCc, _ta, _cAr, _uA],
-    [0, 0, 0, 0, () => ExpressGatewayServiceStatus$, 0, () => ExpressGatewayServiceConfigurations, () => Tags, 4, 4],
-];
-var ECSManagedResources$ = [
-    3,
-    n0,
-    _ECSMR,
-    0,
-    [_iP, _aSu, _mAe, _sSG, _lG],
-    [
-        () => ManagedIngressPaths,
-        () => ManagedAutoScaling$,
-        () => ManagedMetricAlarms,
-        () => ManagedSecurityGroups,
-        () => ManagedLogGroups,
-    ],
-];
-var EFSAuthorizationConfig$ = [3, n0, _EFSAC, 0, [_aPIc, _ia], [0, 0]];
-var EFSVolumeConfiguration$ = [
-    3,
-    n0,
-    _EFSVC,
-    0,
-    [_fSI, _rD, _tEr, _tEP, _aCu],
-    [0, 0, 0, 1, () => EFSAuthorizationConfig$],
-];
-var EnvironmentFile$ = [3, n0, _EF, 0, [_v, _t], [0, 0]];
-var EphemeralStorage$ = [3, n0, _ES, 0, [_sIGB], [1]];
-var ExecuteCommandConfiguration$ = [
-    3,
-    n0,
-    _ECC,
-    0,
-    [_kKI, _lo, _lC],
-    [0, 0, () => ExecuteCommandLogConfiguration$],
-];
-var ExecuteCommandLogConfiguration$ = [
-    3,
-    n0,
-    _ECLC,
-    0,
-    [_cWLGN, _cWEE, _sBN, _sEE, _sKP],
-    [0, 2, 0, 2, 0],
-];
-var ExecuteCommandRequest$ = [
-    3,
-    n0,
-    _ECR,
-    0,
-    [_cl, _cont, _com, _in, _task],
-    [0, 0, 0, 2, 0],
-];
-var ExecuteCommandResponse$ = [
-    3,
-    n0,
-    _ECRx,
-    0,
-    [_cA, _cAo, _cNo, _in, _ses, _tA],
-    [0, 0, 0, 2, [() => Session$, 0], 0],
-];
-var ExpressGatewayContainer$ = [
-    3,
-    n0,
-    _EGC,
-    0,
-    [_im, _cPon, _aLC, _rC, _com, _en, _sec],
-    [
-        0,
-        1,
-        () => ExpressGatewayServiceAwsLogsConfiguration$,
-        () => ExpressGatewayRepositoryCredentials$,
-        64 | 0,
-        () => EnvironmentVariables,
-        () => SecretList,
-    ],
-];
-var ExpressGatewayRepositoryCredentials$ = [3, n0, _EGRC, 0, [_cPr], [0]];
-var ExpressGatewayScalingTarget$ = [
-    3,
-    n0,
-    _EGST,
-    0,
-    [_mTC, _mTCa, _aSM, _aSTV],
-    [1, 1, 0, 1],
-];
-var ExpressGatewayServiceAwsLogsConfiguration$ = [
-    3,
-    n0,
-    _EGSALC,
-    0,
-    [_lGo, _lSP],
-    [0, 0],
-];
-var ExpressGatewayServiceConfiguration$ = [
-    3,
-    n0,
-    _EGSC,
-    0,
-    [_sRAe, _eRA, _tRA, _cp, _mem, _nC, _hCP, _pC, _sTc, _iP, _cAr],
-    [
-        0,
-        0,
-        0,
-        0,
-        0,
-        () => ExpressGatewayServiceNetworkConfiguration$,
-        0,
-        () => ExpressGatewayContainer$,
-        () => ExpressGatewayScalingTarget$,
-        () => IngressPathSummaries,
-        4,
-    ],
-];
-var ExpressGatewayServiceNetworkConfiguration$ = [
-    3,
-    n0,
-    _EGSNC,
-    0,
-    [_sG, _su],
-    [64 | 0, 64 | 0],
-];
-var ExpressGatewayServiceStatus$ = [3, n0, _EGSS, 0, [_sCt, _sR], [0, 0]];
-var Failure$ = [3, n0, _F, 0, [_ar, _r, _de], [0, 0, 0]];
-var FirelensConfiguration$ = [3, n0, _FC, 0, [_t, _o], [0, 128 | 0]];
-var FSxWindowsFileServerAuthorizationConfig$ = [3, n0, _FSWFSAC, 0, [_cPr, _do], [0, 0]];
-var FSxWindowsFileServerVolumeConfiguration$ = [
-    3,
-    n0,
-    _FSWFSVC,
-    0,
-    [_fSI, _rD, _aCu],
-    [0, 0, () => FSxWindowsFileServerAuthorizationConfig$],
-];
-var GetTaskProtectionRequest$ = [3, n0, _GTPR, 0, [_cl, _tas], [0, 64 | 0]];
-var GetTaskProtectionResponse$ = [
-    3,
-    n0,
-    _GTPRe,
-    0,
-    [_pTro, _fa],
-    [() => ProtectedTasks, () => Failures],
-];
-var HealthCheck$ = [3, n0, _HC, 0, [_com, _int, _ti, _re, _sP], [64 | 0, 1, 1, 1, 1]];
-var HostEntry$ = [3, n0, _HE, 0, [_h, _iA], [0, 0]];
-var HostVolumeProperties$ = [3, n0, _HVP, 0, [_sPo], [0]];
-var InferenceAccelerator$ = [3, n0, _IA, 0, [_dNe, _dT], [0, 0]];
-var InferenceAcceleratorOverride$ = [3, n0, _IAO, 0, [_dNe, _dT], [0, 0]];
-var InfrastructureOptimization$ = [3, n0, _IO, 0, [_sIA], [1]];
-var IngressPathSummary$ = [3, n0, _IPS, 0, [_aT, _end], [0, 0]];
-var InstanceHealthCheckResult$ = [3, n0, _IHCR, 0, [_t, _s, _lU, _lSC], [0, 0, 4, 4]];
-var InstanceLaunchTemplate$ = [
-    3,
-    n0,
-    _ILT,
-    0,
-    [_eIPA, _nC, _sCto, _mo, _cOT, _iR],
-    [
-        0,
-        () => ManagedInstancesNetworkConfiguration$,
-        () => ManagedInstancesStorageConfiguration$,
-        0,
-        0,
-        [() => InstanceRequirementsRequest$, 0],
-    ],
-];
-var InstanceLaunchTemplateUpdate$ = [
-    3,
-    n0,
-    _ILTU,
-    0,
-    [_eIPA, _nC, _sCto, _mo, _iR],
-    [
-        0,
-        () => ManagedInstancesNetworkConfiguration$,
-        () => ManagedInstancesStorageConfiguration$,
-        0,
-        [() => InstanceRequirementsRequest$, 0],
-    ],
-];
-var InstanceRequirementsRequest$ = [
-    3,
-    n0,
-    _IRR,
-    0,
-    [
-        _vCC,
-        _mMB,
-        _cM,
-        _mGBPVC,
-        _eIT,
-        _iG,
-        _sMPPOLP,
-        _oDMPPOLP,
-        _bM,
-        _bP,
-        _rHS,
-        _nIC,
-        _lSo,
-        _lST,
-        _tLSGB,
-        _bEBM,
-        _aTc,
-        _aCcc,
-        _aM,
-        _aNc,
-        _aTMMB,
-        _nBG,
-        _aIT,
-        _mSPAPOOODP,
-    ],
-    [
-        () => VCpuCountRangeRequest$,
-        () => MemoryMiBRequest$,
-        [() => CpuManufacturerSet, { [_xN]: _CM }],
-        () => MemoryGiBPerVCpuRequest$,
-        [() => ExcludedInstanceTypeSet, { [_xN]: _EIT }],
-        [() => InstanceGenerationSet, { [_xN]: _IG }],
-        1,
-        1,
-        0,
-        0,
-        2,
-        () => NetworkInterfaceCountRequest$,
-        0,
-        [() => LocalStorageTypeSet, { [_xN]: _LST }],
-        () => TotalLocalStorageGBRequest$,
-        () => BaselineEbsBandwidthMbpsRequest$,
-        [() => AcceleratorTypeSet, { [_xN]: _AT }],
-        () => AcceleratorCountRequest$,
-        [() => AcceleratorManufacturerSet, { [_xN]: _AM }],
-        [() => AcceleratorNameSet, { [_xN]: _AN }],
-        () => AcceleratorTotalMemoryMiBRequest$,
-        () => NetworkBandwidthGbpsRequest$,
-        [() => AllowedInstanceTypeSet, { [_xN]: _AIT }],
-        1,
-    ],
-];
-var InvalidParameterException$ = [-3, n0, _IPE, { [_e]: _c }, [_me], [0]];
-schema.TypeRegistry.for(n0).registerError(InvalidParameterException$, InvalidParameterException);
-var KernelCapabilities$ = [3, n0, _KC, 0, [_ad, _dro], [64 | 0, 64 | 0]];
-var KeyValuePair$ = [3, n0, _KVP, 0, [_n, _v], [0, 0]];
-var LimitExceededException$ = [-3, n0, _LEE, { [_e]: _c }, [_me], [0]];
-schema.TypeRegistry.for(n0).registerError(LimitExceededException$, LimitExceededException);
-var LinearConfiguration$ = [3, n0, _LC, 0, [_sPt, _sBTIM], [1, 1]];
-var LinuxParameters$ = [
-    3,
-    n0,
-    _LP,
-    0,
-    [_ca, _dev, _iPE, _sMS, _tm, _mSa, _sw],
-    [() => KernelCapabilities$, () => DevicesList, 2, 1, () => TmpfsList, 1, 1],
-];
-var ListAccountSettingsRequest$ = [
-    3,
-    n0,
-    _LASR,
-    0,
-    [_n, _v, _pA, _eS, _nT, _mRa],
-    [0, 0, 0, 2, 0, 1],
-];
-var ListAccountSettingsResponse$ = [3, n0, _LASRi, 0, [_se, _nT], [() => Settings, 0]];
-var ListAttributesRequest$ = [
-    3,
-    n0,
-    _LAR,
-    0,
-    [_cl, _tT, _aNt, _aV, _nT, _mRa],
-    [0, 0, 0, 0, 0, 1],
-];
-var ListAttributesResponse$ = [3, n0, _LARi, 0, [_at, _nT], [() => Attributes, 0]];
-var ListClustersRequest$ = [3, n0, _LCR, 0, [_nT, _mRa], [0, 1]];
-var ListClustersResponse$ = [3, n0, _LCRi, 0, [_cAl, _nT], [64 | 0, 0]];
-var ListContainerInstancesRequest$ = [
-    3,
-    n0,
-    _LCIR,
-    0,
-    [_cl, _fi, _nT, _mRa, _s],
-    [0, 0, 0, 1, 0],
-];
-var ListContainerInstancesResponse$ = [3, n0, _LCIRi, 0, [_cIAo, _nT], [64 | 0, 0]];
-var ListServiceDeploymentsRequest$ = [
-    3,
-    n0,
-    _LSDR,
-    0,
-    [_ser, _cl, _s, _cAr, _nT, _mRa],
-    [0, 0, 64 | 0, () => CreatedAt$, 0, 1],
-];
-var ListServiceDeploymentsResponse$ = [
-    3,
-    n0,
-    _LSDRi,
-    0,
-    [_sD, _nT],
-    [() => ServiceDeploymentsBrief, 0],
-];
-var ListServicesByNamespaceRequest$ = [3, n0, _LSBNR, 0, [_na, _nT, _mRa], [0, 0, 1]];
-var ListServicesByNamespaceResponse$ = [3, n0, _LSBNRi, 0, [_sAe, _nT], [64 | 0, 0]];
-var ListServicesRequest$ = [
-    3,
-    n0,
-    _LSR,
-    0,
-    [_cl, _nT, _mRa, _lT, _sS, _rMT],
-    [0, 0, 1, 0, 0, 0],
-];
-var ListServicesResponse$ = [3, n0, _LSRi, 0, [_sAe, _nT], [64 | 0, 0]];
-var ListTagsForResourceRequest$ = [3, n0, _LTFRR, 0, [_rAes], [0]];
-var ListTagsForResourceResponse$ = [3, n0, _LTFRRi, 0, [_ta], [() => Tags]];
-var ListTaskDefinitionFamiliesRequest$ = [
-    3,
-    n0,
-    _LTDFR,
-    0,
-    [_fP, _s, _nT, _mRa],
-    [0, 0, 0, 1],
-];
-var ListTaskDefinitionFamiliesResponse$ = [3, n0, _LTDFRi, 0, [_fam, _nT], [64 | 0, 0]];
-var ListTaskDefinitionsRequest$ = [
-    3,
-    n0,
-    _LTDR,
-    0,
-    [_fP, _s, _so, _nT, _mRa],
-    [0, 0, 0, 0, 1],
-];
-var ListTaskDefinitionsResponse$ = [3, n0, _LTDRi, 0, [_tDA, _nT], [64 | 0, 0]];
-var ListTasksRequest$ = [
-    3,
-    n0,
-    _LTR,
-    0,
-    [_cl, _cI, _fami, _nT, _mRa, _sB, _sN, _dSe, _lT],
-    [0, 0, 0, 0, 1, 0, 0, 0, 0],
-];
-var ListTasksResponse$ = [3, n0, _LTRi, 0, [_tAa, _nT], [64 | 0, 0]];
-var LoadBalancer$ = [
-    3,
-    n0,
-    _LB,
-    0,
-    [_tGA, _lBN, _cNo, _cPon, _aCd],
-    [0, 0, 0, 1, () => AdvancedConfiguration$],
-];
-var LogConfiguration$ = [3, n0, _LCo, 0, [_lD, _o, _sO], [0, 128 | 0, () => SecretList]];
-var ManagedAgent$ = [3, n0, _MA, 0, [_lSA, _n, _r, _lS], [4, 0, 0, 0]];
-var ManagedAgentStateChange$ = [3, n0, _MASC, 0, [_cNo, _mAN, _s, _r], [0, 0, 0, 0]];
-var ManagedApplicationAutoScalingPolicy$ = [
-    3,
-    n0,
-    _MAASP,
-    0,
-    [_ar, _s, _sR, _uA, _pTo, _tV, _met],
-    [0, 0, 0, 4, 0, 1, 0],
-];
-var ManagedAutoScaling$ = [
-    3,
-    n0,
-    _MAS,
-    0,
-    [_sTca, _aASP],
-    [() => ManagedScalableTarget$, () => ManagedApplicationAutoScalingPolicies],
-];
-var ManagedCertificate$ = [3, n0, _MC, 0, [_ar, _s, _sR, _uA, _dNo], [0, 0, 0, 4, 0]];
-var ManagedIngressPath$ = [
-    3,
-    n0,
-    _MIP,
-    0,
-    [_aT, _end, _lBo, _lBSG, _ce, _li, _ru, _tG],
-    [
-        0,
-        0,
-        () => ManagedLoadBalancer$,
-        () => ManagedSecurityGroups,
-        () => ManagedCertificate$,
-        () => ManagedListener$,
-        () => ManagedListenerRule$,
-        () => ManagedTargetGroups,
-    ],
-];
-var ManagedInstancesNetworkConfiguration$ = [
-    3,
-    n0,
-    _MINC,
-    0,
-    [_su, _sG],
-    [64 | 0, 64 | 0],
-];
-var ManagedInstancesProvider$ = [
-    3,
-    n0,
-    _MIPa,
-    0,
-    [_iRA, _iLT, _pTr, _iO],
-    [0, [() => InstanceLaunchTemplate$, 0], 0, () => InfrastructureOptimization$],
-];
-var ManagedInstancesStorageConfiguration$ = [3, n0, _MISC, 0, [_sSGB], [1]];
-var ManagedListener$ = [3, n0, _ML, 0, [_ar, _s, _sR, _uA], [0, 0, 0, 4]];
-var ManagedListenerRule$ = [3, n0, _MLR, 0, [_ar, _s, _sR, _uA], [0, 0, 0, 4]];
-var ManagedLoadBalancer$ = [
-    3,
-    n0,
-    _MLB,
-    0,
-    [_ar, _s, _sR, _uA, _sch, _sI, _sGI],
-    [0, 0, 0, 4, 0, 64 | 0, 64 | 0],
-];
-var ManagedLogGroup$ = [3, n0, _MLG, 0, [_ar, _s, _sR, _uA, _lGN], [0, 0, 0, 4, 0]];
-var ManagedMetricAlarm$ = [3, n0, _MMA, 0, [_ar, _s, _sR, _uA], [0, 0, 0, 4]];
-var ManagedScalableTarget$ = [
-    3,
-    n0,
-    _MST,
-    0,
-    [_ar, _s, _sR, _uA, _mC, _mCa],
-    [0, 0, 0, 4, 1, 1],
-];
-var ManagedScaling$ = [3, n0, _MS, 0, [_s, _tC, _mSSS, _mSSSa, _iWP], [0, 1, 1, 1, 1]];
-var ManagedSecurityGroup$ = [3, n0, _MSG, 0, [_ar, _s, _sR, _uA], [0, 0, 0, 4]];
-var ManagedStorageConfiguration$ = [3, n0, _MSC, 0, [_kKI, _fESKKI], [0, 0]];
-var ManagedTargetGroup$ = [
-    3,
-    n0,
-    _MTG,
-    0,
-    [_ar, _s, _sR, _uA, _hCP, _hCPe, _po],
-    [0, 0, 0, 4, 0, 1, 1],
-];
-var MemoryGiBPerVCpuRequest$ = [3, n0, _MGBPVCR, 0, [_m, _ma], [1, 1]];
-var MemoryMiBRequest$ = [3, n0, _MMBR, 0, [_m, _ma], [1, 1]];
-var MissingVersionException$ = [-3, n0, _MVE, { [_e]: _c }, [_me], [0]];
-schema.TypeRegistry.for(n0).registerError(MissingVersionException$, MissingVersionException);
-var MountPoint$ = [3, n0, _MP, 0, [_sV, _cPo, _rO], [0, 0, 2]];
-var NamespaceNotFoundException$ = [-3, n0, _NNFE, { [_e]: _c }, [_me], [0]];
-schema.TypeRegistry.for(n0).registerError(NamespaceNotFoundException$, NamespaceNotFoundException);
-var NetworkBandwidthGbpsRequest$ = [3, n0, _NBGR, 0, [_m, _ma], [1, 1]];
-var NetworkBinding$ = [
-    3,
-    n0,
-    _NB,
-    0,
-    [_bIP, _cPon, _hPo, _pr, _cPR, _hPR],
-    [0, 1, 1, 0, 0, 0],
-];
-var NetworkConfiguration$ = [3, n0, _NC, 0, [_aCw], [() => AwsVpcConfiguration$]];
-var NetworkInterface$ = [3, n0, _NI, 0, [_aI, _pIA, _iAp], [0, 0, 0]];
-var NetworkInterfaceCountRequest$ = [3, n0, _NICR, 0, [_m, _ma], [1, 1]];
-var NoUpdateAvailableException$ = [-3, n0, _NUAE, { [_e]: _c }, [_me], [0]];
-schema.TypeRegistry.for(n0).registerError(NoUpdateAvailableException$, NoUpdateAvailableException);
-var PlacementConstraint$ = [3, n0, _PC, 0, [_t, _ex], [0, 0]];
-var PlacementStrategy$ = [3, n0, _PS, 0, [_t, _fie], [0, 0]];
-var PlatformDevice$ = [3, n0, _PD, 0, [_i, _t], [0, 0]];
-var PlatformTaskDefinitionIncompatibilityException$ = [
-    -3,
-    n0,
-    _PTDIE,
+var AccessDeniedException$ = [-3, n0, _ADE,
     { [_e]: _c },
     [_me],
-    [0],
+    [0]
 ];
-schema.TypeRegistry.for(n0).registerError(PlatformTaskDefinitionIncompatibilityException$, PlatformTaskDefinitionIncompatibilityException);
-var PlatformUnknownException$ = [-3, n0, _PUE, { [_e]: _c }, [_me], [0]];
-schema.TypeRegistry.for(n0).registerError(PlatformUnknownException$, PlatformUnknownException);
-var PortMapping$ = [3, n0, _PM, 0, [_cPon, _hPo, _pr, _n, _aP, _cPR], [1, 1, 0, 0, 0, 0]];
-var ProtectedTask$ = [3, n0, _PT, 0, [_tA, _pE, _eD], [0, 2, 4]];
-var ProxyConfiguration$ = [
-    3,
-    n0,
-    _PCr,
+schema.TypeRegistry.for(n0).registerError(AccessDeniedException$, AccessDeniedException);
+var AdvancedConfiguration$ = [3, n0, _AC,
     0,
-    [_t, _cNo, _pro],
-    [0, 0, () => ProxyConfigurationProperties],
+    [_aTGA, _pLR, _tLR, _rA],
+    [0, 0, 0, 0]
 ];
-var PutAccountSettingDefaultRequest$ = [3, n0, _PASDR, 0, [_n, _v], [0, 0]];
-var PutAccountSettingDefaultResponse$ = [3, n0, _PASDRu, 0, [_set], [() => Setting$]];
-var PutAccountSettingRequest$ = [3, n0, _PASR, 0, [_n, _v, _pA], [0, 0, 0]];
-var PutAccountSettingResponse$ = [3, n0, _PASRu, 0, [_set], [() => Setting$]];
-var PutAttributesRequest$ = [3, n0, _PAR, 0, [_cl, _at], [0, () => Attributes]];
-var PutAttributesResponse$ = [3, n0, _PARu, 0, [_at], [() => Attributes]];
-var PutClusterCapacityProvidersRequest$ = [
-    3,
-    n0,
-    _PCCPR,
+var Attachment$ = [3, n0, _A,
     0,
-    [_cl, _cPap, _dCPS],
-    [0, 64 | 0, () => CapacityProviderStrategy],
+    [_i, _t, _s, _d],
+    [0, 0, 0, () => AttachmentDetails]
 ];
-var PutClusterCapacityProvidersResponse$ = [3, n0, _PCCPRu, 0, [_cl], [() => Cluster$]];
-var RegisterContainerInstanceRequest$ = [
-    3,
-    n0,
-    _RCIR,
+var AttachmentStateChange$ = [3, n0, _ASC,
     0,
-    [_cl, _iID, _iIDS, _tR, _vI, _cIA, _at, _pD, _ta],
-    [0, 0, 0, () => Resources, () => VersionInfo$, 0, () => Attributes, () => PlatformDevices, () => Tags],
+    [_aA, _s],
+    [0, 0], 2
 ];
-var RegisterContainerInstanceResponse$ = [
-    3,
-    n0,
-    _RCIRe,
+var Attribute$ = [3, n0, _At,
     0,
-    [_cI],
-    [() => ContainerInstance$],
+    [_n, _v, _tT, _tI],
+    [0, 0, 0, 0], 1
 ];
-var RegisterTaskDefinitionRequest$ = [
-    3,
-    n0,
-    _RTDR,
+var AttributeLimitExceededException$ = [-3, n0, _ALEE,
+    { [_e]: _c },
+    [_me],
+    [0]
+];
+schema.TypeRegistry.for(n0).registerError(AttributeLimitExceededException$, AttributeLimitExceededException);
+var AutoScalingGroupProvider$ = [3, n0, _ASGP,
     0,
-    [_fami, _tRA, _eRA, _nM, _cDo, _vo, _pCl, _rCe, _cp, _mem, _ta, _pMi, _iM, _pCr, _iAn, _eSp, _rPu, _eFI],
-    [
-        0,
-        0,
-        0,
-        0,
-        () => ContainerDefinitions,
-        () => VolumeList,
-        () => TaskDefinitionPlacementConstraints,
-        64 | 0,
-        0,
-        0,
-        () => Tags,
-        0,
-        0,
-        () => ProxyConfiguration$,
-        () => InferenceAccelerators,
-        () => EphemeralStorage$,
-        () => RuntimePlatform$,
-        2,
-    ],
+    [_aSGA, _mS, _mTP, _mD],
+    [0, () => ManagedScaling$, 0, 0], 1
 ];
-var RegisterTaskDefinitionResponse$ = [
-    3,
-    n0,
-    _RTDRe,
+var AutoScalingGroupProviderUpdate$ = [3, n0, _ASGPU,
     0,
-    [_tD, _ta],
-    [() => TaskDefinition$, () => Tags],
+    [_mS, _mTP, _mD],
+    [() => ManagedScaling$, 0, 0]
 ];
-var RepositoryCredentials$ = [3, n0, _RC, 0, [_cPr], [0]];
-var ResolvedConfiguration$ = [
-    3,
-    n0,
-    _RCe,
+var AwsVpcConfiguration$ = [3, n0, _AVC,
     0,
-    [_lB],
-    [() => ServiceRevisionLoadBalancers],
+    [_su, _sG, _aPI],
+    [64 | 0, 64 | 0, 0], 1
 ];
-var Resource$ = [3, n0, _R, 0, [_n, _t, _dV, _lV, _iV, _sSV], [0, 0, 1, 1, 1, 64 | 0]];
-var ResourceInUseException$ = [-3, n0, _RIUE, { [_e]: _c }, [_me], [0]];
-schema.TypeRegistry.for(n0).registerError(ResourceInUseException$, ResourceInUseException);
-var ResourceNotFoundException$ = [-3, n0, _RNFE, { [_e]: _c }, [_me], [0]];
-schema.TypeRegistry.for(n0).registerError(ResourceNotFoundException$, ResourceNotFoundException);
-var ResourceRequirement$ = [3, n0, _RR, 0, [_v, _t], [0, 0]];
-var Rollback$ = [3, n0, _Ro, 0, [_r, _sAt, _sRAe], [0, 4, 0]];
-var RunTaskRequest$ = [
-    3,
-    n0,
-    _RTR,
+var BaselineEbsBandwidthMbpsRequest$ = [3, n0, _BEBMR,
     0,
-    [_cPS, _cl, _cou, _eECSMT, _eEC, _g, _lT, _nC, _ov, _pCl, _pS, _pV, _pTr, _rIe, _sB, _ta, _tD, _cT, _vCo],
-    [
-        () => CapacityProviderStrategy,
-        0,
-        1,
-        2,
-        2,
-        0,
-        0,
-        () => NetworkConfiguration$,
-        () => TaskOverride$,
-        () => PlacementConstraints,
-        () => PlacementStrategies,
-        0,
-        0,
-        0,
-        0,
-        () => Tags,
-        0,
-        [0, 4],
-        () => TaskVolumeConfigurations,
-    ],
+    [_m, _ma],
+    [1, 1]
 ];
-var RunTaskResponse$ = [3, n0, _RTRu, 0, [_tas, _fa], [() => Tasks, () => Failures]];
-var RuntimePlatform$ = [3, n0, _RP, 0, [_cAp, _oSF], [0, 0]];
-var Scale$ = [3, n0, _S, 0, [_v, _un], [1, 0]];
-var Secret$ = [3, n0, _Se, 0, [_n, _vFa], [0, 0]];
-var ServerException$ = [-3, n0, _SE, { [_e]: _serve }, [_me], [0]];
-schema.TypeRegistry.for(n0).registerError(ServerException$, ServerException);
-var Service$ = [
-    3,
-    n0,
-    _Ser,
+var BlockedException$ = [-3, n0, _BE,
+    { [_e]: _c },
+    [_me],
+    [0]
+];
+schema.TypeRegistry.for(n0).registerError(BlockedException$, BlockedException);
+var CanaryConfiguration$ = [3, n0, _CC,
     0,
-    [
-        _sA,
-        _sN,
-        _cA,
-        _lB,
-        _sRe,
-        _s,
-        _dC,
-        _rCu,
-        _pCe,
-        _lT,
-        _cPS,
-        _pV,
-        _pF,
-        _tD,
-        _dCe,
-        _tSa,
-        _dep,
-        _rA,
-        _ev,
-        _cAr,
-        _cSD,
-        _cSR,
-        _pCl,
-        _pS,
-        _nC,
-        _hCGPS,
-        _sS,
-        _dCep,
-        _ta,
-        _cB,
-        _eECSMT,
-        _pTr,
-        _eEC,
-        _aZR,
-        _rMT,
-    ],
-    [
-        0,
-        0,
-        0,
-        () => LoadBalancers,
-        () => ServiceRegistries,
-        0,
-        1,
-        1,
-        1,
-        0,
-        () => CapacityProviderStrategy,
-        0,
-        0,
-        0,
-        () => DeploymentConfiguration$,
-        () => TaskSets,
-        () => Deployments,
-        0,
-        () => ServiceEvents,
-        4,
-        0,
-        () => ServiceCurrentRevisionSummaryList,
-        () => PlacementConstraints,
-        () => PlacementStrategies,
-        () => NetworkConfiguration$,
-        1,
-        0,
-        () => DeploymentController$,
-        () => Tags,
-        0,
-        2,
-        0,
-        2,
-        0,
-        0,
-    ],
+    [_cP, _cBTIM],
+    [1, 1]
 ];
-var ServiceConnectAccessLogConfiguration$ = [3, n0, _SCALC, 0, [_fo, _iQP], [0, 0]];
-var ServiceConnectClientAlias$ = [
-    3,
-    n0,
-    _SCCA,
+var CapacityProvider$ = [3, n0, _CP,
     0,
-    [_po, _dNn, _tTR],
-    [1, 0, () => ServiceConnectTestTrafficRules$],
+    [_cPA, _n, _cl, _s, _aSGP, _mIP, _uS, _uSR, _ta, _t],
+    [0, 0, 0, 0, () => AutoScalingGroupProvider$, [() => ManagedInstancesProvider$, 0], 0, 0, () => Tags, 0]
 ];
-var ServiceConnectConfiguration$ = [
-    3,
-    n0,
-    _SCC,
+var CapacityProviderStrategyItem$ = [3, n0, _CPSI,
     0,
-    [_ena, _na, _serv, _lC, _aLCc],
-    [2, 0, () => ServiceConnectServiceList, () => LogConfiguration$, () => ServiceConnectAccessLogConfiguration$],
+    [_cPa, _w, _b],
+    [0, 1, 1], 1
 ];
-var ServiceConnectService$ = [
-    3,
-    n0,
-    _SCS,
+var ClientException$ = [-3, n0, _CE,
+    { [_e]: _c },
+    [_me],
+    [0]
+];
+schema.TypeRegistry.for(n0).registerError(ClientException$, ClientException);
+var Cluster$ = [3, n0, _C,
     0,
-    [_pN, _dNi, _cAli, _iPO, _ti, _tl],
-    [0, 0, () => ServiceConnectClientAliasList, 1, () => TimeoutConfiguration$, () => ServiceConnectTlsConfiguration$],
+    [_cA, _cN, _co, _s, _rCIC, _rTC, _pTC, _aSC, _st, _ta, _se, _cPap, _dCPS, _a, _aS, _sCD],
+    [0, 0, () => ClusterConfiguration$, 0, 1, 1, 1, 1, () => Statistics, () => Tags, () => ClusterSettings, 64 | 0, () => CapacityProviderStrategy, () => Attachments, 0, () => ClusterServiceConnectDefaults$]
 ];
-var ServiceConnectServiceResource$ = [3, n0, _SCSR, 0, [_dNi, _dA], [0, 0]];
-var ServiceConnectTestTrafficHeaderMatchRules$ = [3, n0, _SCTTHMR, 0, [_exa], [0]];
-var ServiceConnectTestTrafficHeaderRules$ = [
-    3,
-    n0,
-    _SCTTHR,
+var ClusterConfiguration$ = [3, n0, _CCl,
+    0,
+    [_eCC, _mSC],
+    [() => ExecuteCommandConfiguration$, () => ManagedStorageConfiguration$]
+];
+var ClusterContainsCapacityProviderException$ = [-3, n0, _CCCPE,
+    { [_e]: _c },
+    [_me],
+    [0]
+];
+schema.TypeRegistry.for(n0).registerError(ClusterContainsCapacityProviderException$, ClusterContainsCapacityProviderException);
+var ClusterContainsContainerInstancesException$ = [-3, n0, _CCCIE,
+    { [_e]: _c },
+    [_me],
+    [0]
+];
+schema.TypeRegistry.for(n0).registerError(ClusterContainsContainerInstancesException$, ClusterContainsContainerInstancesException);
+var ClusterContainsServicesException$ = [-3, n0, _CCSE,
+    { [_e]: _c },
+    [_me],
+    [0]
+];
+schema.TypeRegistry.for(n0).registerError(ClusterContainsServicesException$, ClusterContainsServicesException);
+var ClusterContainsTasksException$ = [-3, n0, _CCTE,
+    { [_e]: _c },
+    [_me],
+    [0]
+];
+schema.TypeRegistry.for(n0).registerError(ClusterContainsTasksException$, ClusterContainsTasksException);
+var ClusterNotFoundException$ = [-3, n0, _CNFE,
+    { [_e]: _c },
+    [_me],
+    [0]
+];
+schema.TypeRegistry.for(n0).registerError(ClusterNotFoundException$, ClusterNotFoundException);
+var ClusterServiceConnectDefaults$ = [3, n0, _CSCD,
+    0,
+    [_na],
+    [0]
+];
+var ClusterServiceConnectDefaultsRequest$ = [3, n0, _CSCDR,
+    0,
+    [_na],
+    [0], 1
+];
+var ClusterSetting$ = [3, n0, _CS,
     0,
     [_n, _v],
-    [0, () => ServiceConnectTestTrafficHeaderMatchRules$],
+    [0, 0]
 ];
-var ServiceConnectTestTrafficRules$ = [
-    3,
-    n0,
-    _SCTTR,
+var ConflictException$ = [-3, n0, _CEo,
+    { [_e]: _c },
+    [_rI, _me],
+    [64 | 0, 0]
+];
+schema.TypeRegistry.for(n0).registerError(ConflictException$, ConflictException);
+var Container$ = [3, n0, _Co,
     0,
-    [_he],
-    [() => ServiceConnectTestTrafficHeaderRules$],
+    [_cAo, _tA, _n, _im, _iD, _rIu, _lS, _eC, _r, _nB, _nI, _hS, _mA, _cp, _mem, _mR, _gI],
+    [0, 0, 0, 0, 0, 0, 0, 1, 0, () => NetworkBindings, () => NetworkInterfaces, 0, () => ManagedAgents, 0, 0, 0, 64 | 0]
 ];
-var ServiceConnectTlsCertificateAuthority$ = [3, n0, _SCTCA, 0, [_aPAA], [0]];
-var ServiceConnectTlsConfiguration$ = [
-    3,
-    n0,
-    _SCTC,
+var ContainerDefinition$ = [3, n0, _CD,
     0,
-    [_iCA, _kK, _rA],
-    [() => ServiceConnectTlsCertificateAuthority$, 0, 0],
+    [_n, _im, _rC, _cp, _mem, _mR, _l, _pM, _es, _rP, _eP, _com, _en, _eF, _mP, _vF, _lP, _sec, _dO, _sT, _sTt, _vC, _h, _u, _wD, _dN, _p, _rRF, _dS, _dSD, _eH, _dSO, _in, _pT, _dL, _ul, _lC, _hC, _sC, _rR, _fC, _cS],
+    [0, 0, () => RepositoryCredentials$, 1, 1, 1, 64 | 0, () => PortMappingList, 2, () => ContainerRestartPolicy$, 64 | 0, 64 | 0, () => EnvironmentVariables, () => EnvironmentFiles, () => MountPointList, () => VolumeFromList, () => LinuxParameters$, () => SecretList, () => ContainerDependencies, 1, 1, 0, 0, 0, 0, 2, 2, 2, 64 | 0, 64 | 0, () => HostEntryList, 64 | 0, 2, 2, 128 | 0, () => UlimitList, () => LogConfiguration$, () => HealthCheck$, () => SystemControls, () => ResourceRequirements, () => FirelensConfiguration$, 64 | 0]
 ];
-var ServiceCurrentRevisionSummary$ = [
-    3,
-    n0,
-    _SCRS,
+var ContainerDependency$ = [3, n0, _CDo,
     0,
-    [_ar, _rTCe, _rTCu, _pTCe],
-    [0, 1, 1, 1],
+    [_cNo, _con],
+    [0, 0], 2
 ];
-var ServiceDeployment$ = [
-    3,
-    n0,
-    _SD,
+var ContainerImage$ = [3, n0, _CI,
     0,
-    [_sDAe, _sA, _cA, _cAr, _sAt, _fA, _sAto, _uA, _sSR, _tSR, _s, _sR, _lSif, _dCe, _rol, _dCB, _al],
-    [
-        0,
-        0,
-        0,
-        4,
-        4,
-        4,
-        4,
-        4,
-        () => ServiceRevisionsSummaryList,
-        () => ServiceRevisionSummary$,
-        0,
-        0,
-        0,
-        () => DeploymentConfiguration$,
-        () => Rollback$,
-        () => ServiceDeploymentCircuitBreaker$,
-        () => ServiceDeploymentAlarms$,
-    ],
+    [_cNo, _iD, _im],
+    [0, 0, 0]
 ];
-var ServiceDeploymentAlarms$ = [3, n0, _SDA, 0, [_s, _aN, _tAN], [0, 64 | 0, 64 | 0]];
-var ServiceDeploymentBrief$ = [
-    3,
-    n0,
-    _SDB,
+var ContainerInstance$ = [3, n0, _CIo,
     0,
-    [_sDAe, _sA, _cA, _sAt, _cAr, _fA, _tSRA, _s, _sR],
-    [0, 0, 0, 4, 4, 4, 0, 0, 0],
+    [_cIA, _eII, _cPN, _ve, _vI, _rRe, _rReg, _s, _sR, _aC, _rTC, _pTC, _aUS, _at, _rAe, _a, _ta, _hS],
+    [0, 0, 0, 1, () => VersionInfo$, () => Resources, () => Resources, 0, 0, 2, 1, 1, 0, () => Attributes, 4, () => Attachments, () => Tags, () => ContainerInstanceHealthStatus$]
 ];
-var ServiceDeploymentCircuitBreaker$ = [3, n0, _SDCB, 0, [_s, _fCa, _th], [0, 1, 1]];
-var ServiceDeploymentNotFoundException$ = [-3, n0, _SDNFE, { [_e]: _c }, [_me], [0]];
-schema.TypeRegistry.for(n0).registerError(ServiceDeploymentNotFoundException$, ServiceDeploymentNotFoundException);
-var ServiceEvent$ = [3, n0, _SEe, 0, [_i, _cAr, _me], [0, 4, 0]];
-var ServiceManagedEBSVolumeConfiguration$ = [
-    3,
-    n0,
-    _SMEBSVC,
+var ContainerInstanceHealthStatus$ = [3, n0, _CIHS,
     0,
-    [_enc, _kKI, _vT, _sIGB, _sIn, _vIR, _io, _thr, _tSag, _rA, _fTi],
-    [2, 0, 0, 1, 0, 1, 1, 1, () => EBSTagSpecifications, 0, 0],
+    [_oS, _d],
+    [0, () => InstanceHealthCheckResultList]
 ];
-var ServiceNotActiveException$ = [-3, n0, _SNAE, { [_e]: _c }, [_me], [0]];
-schema.TypeRegistry.for(n0).registerError(ServiceNotActiveException$, ServiceNotActiveException);
-var ServiceNotFoundException$ = [-3, n0, _SNFE, { [_e]: _c }, [_me], [0]];
-schema.TypeRegistry.for(n0).registerError(ServiceNotFoundException$, ServiceNotFoundException);
-var ServiceRegistry$ = [3, n0, _SR, 0, [_rAeg, _po, _cNo, _cPon], [0, 1, 0, 1]];
-var ServiceRevision$ = [
-    3,
-    n0,
-    _SRe,
+var ContainerOverride$ = [3, n0, _CO,
     0,
-    [_sRAe, _sA, _cA, _tD, _cPS, _lT, _pV, _pF, _lB, _sRe, _nC, _cIon, _gDE, _sCC, _vCo, _fES, _cAr, _vLC, _rCes, _eMR],
-    [
-        0,
-        0,
-        0,
-        0,
-        () => CapacityProviderStrategy,
-        0,
-        0,
-        0,
-        () => LoadBalancers,
-        () => ServiceRegistries,
-        () => NetworkConfiguration$,
-        () => ContainerImages,
-        2,
-        () => ServiceConnectConfiguration$,
-        () => ServiceVolumeConfigurations,
-        () => DeploymentEphemeralStorage$,
-        4,
-        () => VpcLatticeConfigurations,
-        () => ResolvedConfiguration$,
-        () => ECSManagedResources$,
-    ],
+    [_n, _com, _en, _eF, _cp, _mem, _mR, _rR],
+    [0, 64 | 0, () => EnvironmentVariables, () => EnvironmentFiles, 1, 1, 1, () => ResourceRequirements]
 ];
-var ServiceRevisionLoadBalancer$ = [3, n0, _SRLB, 0, [_tGA, _pLR], [0, 0]];
-var ServiceRevisionSummary$ = [
-    3,
-    n0,
-    _SRS,
+var ContainerRestartPolicy$ = [3, n0, _CRP,
     0,
-    [_ar, _rTCe, _rTCu, _pTCe, _rTTW, _rPTW],
-    [0, 1, 1, 1, 1, 1],
+    [_ena, _iEC, _rAP],
+    [2, 64 | 1, 1], 1
 ];
-var ServiceVolumeConfiguration$ = [
-    3,
-    n0,
-    _SVC,
+var ContainerStateChange$ = [3, n0, _CSC,
     0,
-    [_n, _mEBSV],
-    [0, () => ServiceManagedEBSVolumeConfiguration$],
+    [_cNo, _iD, _rIu, _eC, _nB, _r, _s],
+    [0, 0, 0, 1, () => NetworkBindings, 0, 0]
 ];
-var Session$ = [3, n0, _Ses, 0, [_sIe, _sU, _tVo], [0, 0, [() => SensitiveString, 0]]];
-var Setting$ = [3, n0, _Set, 0, [_n, _v, _pA, _t], [0, 0, 0, 0]];
-var StartTaskRequest$ = [
-    3,
-    n0,
-    _STR,
+var CreateCapacityProviderRequest$ = [3, n0, _CCPR,
     0,
-    [_cl, _cIo, _eECSMT, _eEC, _g, _nC, _ov, _pTr, _rIe, _sB, _ta, _tD, _vCo],
-    [
-        0,
-        64 | 0,
-        2,
-        2,
-        0,
-        () => NetworkConfiguration$,
-        () => TaskOverride$,
-        0,
-        0,
-        0,
-        () => Tags,
-        0,
-        () => TaskVolumeConfigurations,
-    ],
+    [_n, _cl, _aSGP, _mIP, _ta],
+    [0, 0, () => AutoScalingGroupProvider$, [() => CreateManagedInstancesProviderConfiguration$, 0], () => Tags], 1
 ];
-var StartTaskResponse$ = [3, n0, _STRt, 0, [_tas, _fa], [() => Tasks, () => Failures]];
-var StopServiceDeploymentRequest$ = [3, n0, _SSDR, 0, [_sDAe, _sTto], [0, 0]];
-var StopServiceDeploymentResponse$ = [3, n0, _SSDRt, 0, [_sDAe], [0]];
-var StopTaskRequest$ = [3, n0, _STRto, 0, [_cl, _task, _r], [0, 0, 0]];
-var StopTaskResponse$ = [3, n0, _STRtop, 0, [_task], [() => Task$]];
-var SubmitAttachmentStateChangesRequest$ = [
-    3,
-    n0,
-    _SASCR,
-    0,
-    [_cl, _a],
-    [0, () => AttachmentStateChanges],
-];
-var SubmitAttachmentStateChangesResponse$ = [3, n0, _SASCRu, 0, [_ac], [0]];
-var SubmitContainerStateChangeRequest$ = [
-    3,
-    n0,
-    _SCSCR,
-    0,
-    [_cl, _task, _cNo, _rIu, _s, _eC, _r, _nB],
-    [0, 0, 0, 0, 0, 1, 0, () => NetworkBindings],
-];
-var SubmitContainerStateChangeResponse$ = [3, n0, _SCSCRu, 0, [_ac], [0]];
-var SubmitTaskStateChangeRequest$ = [
-    3,
-    n0,
-    _STSCR,
-    0,
-    [_cl, _task, _s, _r, _conta, _a, _mA, _pSA, _pSAu, _eSA],
-    [0, 0, 0, 0, () => ContainerStateChanges, () => AttachmentStateChanges, () => ManagedAgentStateChanges, 4, 4, 4],
-];
-var SubmitTaskStateChangeResponse$ = [3, n0, _STSCRu, 0, [_ac], [0]];
-var SystemControl$ = [3, n0, _SC, 0, [_na, _v], [0, 0]];
-var Tag$ = [3, n0, _T, 0, [_k, _v], [0, 0]];
-var TagResourceRequest$ = [3, n0, _TRR, 0, [_rAes, _ta], [0, () => Tags]];
-var TagResourceResponse$ = [3, n0, _TRRa, 0, [], []];
-var TargetNotConnectedException$ = [-3, n0, _TNCE, { [_e]: _c }, [_me], [0]];
-schema.TypeRegistry.for(n0).registerError(TargetNotConnectedException$, TargetNotConnectedException);
-var TargetNotFoundException$ = [-3, n0, _TNFE, { [_e]: _c }, [_me], [0]];
-schema.TypeRegistry.for(n0).registerError(TargetNotFoundException$, TargetNotFoundException);
-var Task$ = [
-    3,
-    n0,
-    _Ta,
-    0,
-    [
-        _a,
-        _at,
-        _aZ,
-        _cPN,
-        _cA,
-        _conn,
-        _cAon,
-        _cIA,
-        _conta,
-        _cp,
-        _cAr,
-        _dSe,
-        _eEC,
-        _eSA,
-        _g,
-        _hS,
-        _iAn,
-        _lS,
-        _lT,
-        _mem,
-        _ov,
-        _pV,
-        _pF,
-        _pSA,
-        _pSAu,
-        _sAt,
-        _sB,
-        _sCtop,
-        _sAto,
-        _sRt,
-        _sAtop,
-        _ta,
-        _tA,
-        _tDAa,
-        _ve,
-        _eSp,
-        _fES,
-    ],
-    [
-        () => Attachments,
-        () => Attributes,
-        0,
-        0,
-        0,
-        0,
-        4,
-        0,
-        () => Containers,
-        0,
-        4,
-        0,
-        2,
-        4,
-        0,
-        0,
-        () => InferenceAccelerators,
-        0,
-        0,
-        0,
-        () => TaskOverride$,
-        0,
-        0,
-        4,
-        4,
-        4,
-        0,
-        0,
-        4,
-        0,
-        4,
-        () => Tags,
-        0,
-        0,
-        1,
-        () => EphemeralStorage$,
-        () => TaskEphemeralStorage$,
-    ],
-];
-var TaskDefinition$ = [
-    3,
-    n0,
-    _TD,
-    0,
-    [
-        _tDAa,
-        _cDo,
-        _fami,
-        _tRA,
-        _eRA,
-        _nM,
-        _rev,
-        _vo,
-        _s,
-        _rAeq,
-        _pCl,
-        _comp,
-        _rPu,
-        _rCe,
-        _cp,
-        _mem,
-        _iAn,
-        _pMi,
-        _iM,
-        _pCr,
-        _rAe,
-        _dAe,
-        _rB,
-        _eSp,
-        _eFI,
-    ],
-    [
-        0,
-        () => ContainerDefinitions,
-        0,
-        0,
-        0,
-        0,
-        1,
-        () => VolumeList,
-        0,
-        () => RequiresAttributes,
-        () => TaskDefinitionPlacementConstraints,
-        64 | 0,
-        () => RuntimePlatform$,
-        64 | 0,
-        0,
-        0,
-        () => InferenceAccelerators,
-        0,
-        0,
-        () => ProxyConfiguration$,
-        4,
-        4,
-        0,
-        () => EphemeralStorage$,
-        2,
-    ],
-];
-var TaskDefinitionPlacementConstraint$ = [3, n0, _TDPC, 0, [_t, _ex], [0, 0]];
-var TaskEphemeralStorage$ = [3, n0, _TES, 0, [_sIGB, _kKI], [1, 0]];
-var TaskManagedEBSVolumeConfiguration$ = [
-    3,
-    n0,
-    _TMEBSVC,
-    0,
-    [_enc, _kKI, _vT, _sIGB, _sIn, _vIR, _io, _thr, _tSag, _rA, _tP, _fTi],
-    [2, 0, 0, 1, 0, 1, 1, 1, () => EBSTagSpecifications, 0, () => TaskManagedEBSVolumeTerminationPolicy$, 0],
-];
-var TaskManagedEBSVolumeTerminationPolicy$ = [3, n0, _TMEBSVTP, 0, [_dOT], [2]];
-var TaskOverride$ = [
-    3,
-    n0,
-    _TO,
-    0,
-    [_cO, _cp, _iAO, _eRA, _mem, _tRA, _eSp],
-    [() => ContainerOverrides, 0, () => InferenceAcceleratorOverrides, 0, 0, 0, () => EphemeralStorage$],
-];
-var TaskSet$ = [
-    3,
-    n0,
-    _TS,
-    0,
-    [
-        _i,
-        _tSA,
-        _sA,
-        _cA,
-        _sB,
-        _eI,
-        _s,
-        _tD,
-        _cDC,
-        _pCe,
-        _rCu,
-        _cAr,
-        _uA,
-        _lT,
-        _cPS,
-        _pV,
-        _pF,
-        _nC,
-        _lB,
-        _sRe,
-        _sc,
-        _sSt,
-        _sSA,
-        _ta,
-        _fES,
-    ],
-    [
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        1,
-        1,
-        1,
-        4,
-        4,
-        0,
-        () => CapacityProviderStrategy,
-        0,
-        0,
-        () => NetworkConfiguration$,
-        () => LoadBalancers,
-        () => ServiceRegistries,
-        () => Scale$,
-        0,
-        4,
-        () => Tags,
-        () => DeploymentEphemeralStorage$,
-    ],
-];
-var TaskSetNotFoundException$ = [-3, n0, _TSNFE, { [_e]: _c }, [_me], [0]];
-schema.TypeRegistry.for(n0).registerError(TaskSetNotFoundException$, TaskSetNotFoundException);
-var TaskVolumeConfiguration$ = [
-    3,
-    n0,
-    _TVC,
-    0,
-    [_n, _mEBSV],
-    [0, () => TaskManagedEBSVolumeConfiguration$],
-];
-var TimeoutConfiguration$ = [3, n0, _TC, 0, [_iTS, _pRTS], [1, 1]];
-var Tmpfs$ = [3, n0, _Tm, 0, [_cPo, _si, _mO], [0, 1, 64 | 0]];
-var TotalLocalStorageGBRequest$ = [3, n0, _TLSGBR, 0, [_m, _ma], [1, 1]];
-var Ulimit$ = [3, n0, _U, 0, [_n, _sL, _hL], [0, 1, 1]];
-var UnsupportedFeatureException$ = [-3, n0, _UFE, { [_e]: _c }, [_me], [0]];
-schema.TypeRegistry.for(n0).registerError(UnsupportedFeatureException$, UnsupportedFeatureException);
-var UntagResourceRequest$ = [3, n0, _URR, 0, [_rAes, _tK], [0, 64 | 0]];
-var UntagResourceResponse$ = [3, n0, _URRn, 0, [], []];
-var UpdateCapacityProviderRequest$ = [
-    3,
-    n0,
-    _UCPR,
-    0,
-    [_n, _cl, _aSGP, _mIP],
-    [0, 0, () => AutoScalingGroupProviderUpdate$, [() => UpdateManagedInstancesProviderConfiguration$, 0]],
-];
-var UpdateCapacityProviderResponse$ = [
-    3,
-    n0,
-    _UCPRp,
+var CreateCapacityProviderResponse$ = [3, n0, _CCPRr,
     0,
     [_cPa],
-    [[() => CapacityProvider$, 0]],
+    [[() => CapacityProvider$, 0]]
 ];
-var UpdateClusterRequest$ = [
-    3,
-    n0,
-    _UCR,
+var CreateClusterRequest$ = [3, n0, _CCR,
     0,
-    [_cl, _se, _co, _sCD],
-    [0, () => ClusterSettings, () => ClusterConfiguration$, () => ClusterServiceConnectDefaultsRequest$],
+    [_cN, _ta, _se, _co, _cPap, _dCPS, _sCD],
+    [0, () => Tags, () => ClusterSettings, () => ClusterConfiguration$, 64 | 0, () => CapacityProviderStrategy, () => ClusterServiceConnectDefaultsRequest$]
 ];
-var UpdateClusterResponse$ = [3, n0, _UCRp, 0, [_cl], [() => Cluster$]];
-var UpdateClusterSettingsRequest$ = [
-    3,
-    n0,
-    _UCSR,
+var CreateClusterResponse$ = [3, n0, _CCRr,
     0,
-    [_cl, _se],
-    [0, () => ClusterSettings],
+    [_cl],
+    [() => Cluster$]
 ];
-var UpdateClusterSettingsResponse$ = [3, n0, _UCSRp, 0, [_cl], [() => Cluster$]];
-var UpdateContainerAgentRequest$ = [3, n0, _UCAR, 0, [_cl, _cI], [0, 0]];
-var UpdateContainerAgentResponse$ = [3, n0, _UCARp, 0, [_cI], [() => ContainerInstance$]];
-var UpdateContainerInstancesStateRequest$ = [
-    3,
-    n0,
-    _UCISR,
+var CreatedAt$ = [3, n0, _CA,
     0,
-    [_cl, _cIo, _s],
-    [0, 64 | 0, 0],
+    [_be, _af],
+    [4, 4]
 ];
-var UpdateContainerInstancesStateResponse$ = [
-    3,
-    n0,
-    _UCISRp,
+var CreateExpressGatewayServiceRequest$ = [3, n0, _CEGSR,
     0,
-    [_cIo, _fa],
-    [() => ContainerInstances, () => Failures],
+    [_eRA, _iRA, _pC, _sN, _cl, _hCP, _tRA, _nC, _cp, _mem, _sTc, _ta],
+    [0, 0, () => ExpressGatewayContainer$, 0, 0, 0, 0, () => ExpressGatewayServiceNetworkConfiguration$, 0, 0, () => ExpressGatewayScalingTarget$, () => Tags], 3
 ];
-var UpdatedExpressGatewayService$ = [
-    3,
-    n0,
-    _UEGS,
-    0,
-    [_sA, _cl, _sN, _s, _tCa, _cAr, _uA],
-    [0, 0, 0, () => ExpressGatewayServiceStatus$, () => ExpressGatewayServiceConfiguration$, 4, 4],
-];
-var UpdateExpressGatewayServiceRequest$ = [
-    3,
-    n0,
-    _UEGSR,
-    0,
-    [_sA, _eRA, _hCP, _pC, _tRA, _nC, _cp, _mem, _sTc],
-    [
-        0,
-        0,
-        0,
-        () => ExpressGatewayContainer$,
-        0,
-        () => ExpressGatewayServiceNetworkConfiguration$,
-        0,
-        0,
-        () => ExpressGatewayScalingTarget$,
-    ],
-];
-var UpdateExpressGatewayServiceResponse$ = [
-    3,
-    n0,
-    _UEGSRp,
+var CreateExpressGatewayServiceResponse$ = [3, n0, _CEGSRr,
     0,
     [_ser],
-    [() => UpdatedExpressGatewayService$],
+    [() => ECSExpressGatewayService$]
 ];
-var UpdateInProgressException$ = [-3, n0, _UIPE, { [_e]: _c }, [_me], [0]];
-schema.TypeRegistry.for(n0).registerError(UpdateInProgressException$, UpdateInProgressException);
-var UpdateManagedInstancesProviderConfiguration$ = [
-    3,
-    n0,
-    _UMIPC,
+var CreateManagedInstancesProviderConfiguration$ = [3, n0, _CMIPC,
     0,
     [_iRA, _iLT, _pTr, _iO],
-    [0, [() => InstanceLaunchTemplateUpdate$, 0], 0, () => InfrastructureOptimization$],
+    [0, [() => InstanceLaunchTemplate$, 0], 0, () => InfrastructureOptimization$], 2
 ];
-var UpdateServicePrimaryTaskSetRequest$ = [
-    3,
-    n0,
-    _USPTSR,
+var CreateServiceRequest$ = [3, n0, _CSR,
     0,
-    [_cl, _ser, _pTS],
-    [0, 0, 0],
+    [_sN, _cl, _tD, _aZR, _lB, _sRe, _dC, _cT, _lT, _cPS, _pV, _ro, _dCe, _pCl, _pS, _nC, _hCGPS, _sS, _dCep, _ta, _eECSMT, _pTr, _eEC, _sCC, _vCo, _vLC],
+    [0, 0, 0, 0, () => LoadBalancers, () => ServiceRegistries, 1, 0, 0, () => CapacityProviderStrategy, 0, 0, () => DeploymentConfiguration$, () => PlacementConstraints, () => PlacementStrategies, () => NetworkConfiguration$, 1, 0, () => DeploymentController$, () => Tags, 2, 0, 2, () => ServiceConnectConfiguration$, () => ServiceVolumeConfigurations, () => VpcLatticeConfigurations], 1
 ];
-var UpdateServicePrimaryTaskSetResponse$ = [3, n0, _USPTSRp, 0, [_tS], [() => TaskSet$]];
-var UpdateServiceRequest$ = [
-    3,
-    n0,
-    _USR,
+var CreateServiceResponse$ = [3, n0, _CSRr,
     0,
-    [
-        _cl,
-        _ser,
-        _dC,
-        _tD,
-        _cPS,
-        _dCe,
-        _aZR,
-        _nC,
-        _pCl,
-        _pS,
-        _pV,
-        _fND,
-        _hCGPS,
-        _dCep,
-        _eEC,
-        _eECSMT,
-        _lB,
-        _pTr,
-        _sRe,
-        _sCC,
-        _vCo,
-        _vLC,
-    ],
-    [
-        0,
-        0,
-        1,
-        0,
-        () => CapacityProviderStrategy,
-        () => DeploymentConfiguration$,
-        0,
-        () => NetworkConfiguration$,
-        () => PlacementConstraints,
-        () => PlacementStrategies,
-        0,
-        2,
-        1,
-        () => DeploymentController$,
-        2,
-        2,
-        () => LoadBalancers,
-        0,
-        () => ServiceRegistries,
-        () => ServiceConnectConfiguration$,
-        () => ServiceVolumeConfigurations,
-        () => VpcLatticeConfigurations,
-    ],
+    [_ser],
+    [() => Service$]
 ];
-var UpdateServiceResponse$ = [3, n0, _USRp, 0, [_ser], [() => Service$]];
-var UpdateTaskProtectionRequest$ = [
-    3,
-    n0,
-    _UTPR,
+var CreateTaskSetRequest$ = [3, n0, _CTSR,
     0,
-    [_cl, _tas, _pE, _eIM],
-    [0, 64 | 0, 2, 1],
+    [_ser, _cl, _tD, _eI, _nC, _lB, _sRe, _lT, _cPS, _pV, _sc, _cT, _ta],
+    [0, 0, 0, 0, () => NetworkConfiguration$, () => LoadBalancers, () => ServiceRegistries, 0, () => CapacityProviderStrategy, 0, () => Scale$, 0, () => Tags], 3
 ];
-var UpdateTaskProtectionResponse$ = [
-    3,
-    n0,
-    _UTPRp,
+var CreateTaskSetResponse$ = [3, n0, _CTSRr,
+    0,
+    [_tS],
+    [() => TaskSet$]
+];
+var DeleteAccountSettingRequest$ = [3, n0, _DASR,
+    0,
+    [_n, _pA],
+    [0, 0], 1
+];
+var DeleteAccountSettingResponse$ = [3, n0, _DASRe,
+    0,
+    [_set],
+    [() => Setting$]
+];
+var DeleteAttributesRequest$ = [3, n0, _DAR,
+    0,
+    [_at, _cl],
+    [() => Attributes, 0], 1
+];
+var DeleteAttributesResponse$ = [3, n0, _DARe,
+    0,
+    [_at],
+    [() => Attributes]
+];
+var DeleteCapacityProviderRequest$ = [3, n0, _DCPR,
+    0,
+    [_cPa, _cl],
+    [0, 0], 1
+];
+var DeleteCapacityProviderResponse$ = [3, n0, _DCPRe,
+    0,
+    [_cPa],
+    [[() => CapacityProvider$, 0]]
+];
+var DeleteClusterRequest$ = [3, n0, _DCR,
+    0,
+    [_cl],
+    [0], 1
+];
+var DeleteClusterResponse$ = [3, n0, _DCRe,
+    0,
+    [_cl],
+    [() => Cluster$]
+];
+var DeleteExpressGatewayServiceRequest$ = [3, n0, _DEGSR,
+    0,
+    [_sA],
+    [0], 1
+];
+var DeleteExpressGatewayServiceResponse$ = [3, n0, _DEGSRe,
+    0,
+    [_ser],
+    [() => ECSExpressGatewayService$]
+];
+var DeleteServiceRequest$ = [3, n0, _DSR,
+    0,
+    [_ser, _cl, _f],
+    [0, 0, 2], 1
+];
+var DeleteServiceResponse$ = [3, n0, _DSRe,
+    0,
+    [_ser],
+    [() => Service$]
+];
+var DeleteTaskDefinitionsRequest$ = [3, n0, _DTDR,
+    0,
+    [_tDa],
+    [64 | 0], 1
+];
+var DeleteTaskDefinitionsResponse$ = [3, n0, _DTDRe,
+    0,
+    [_tDa, _fa],
+    [() => TaskDefinitionList, () => Failures]
+];
+var DeleteTaskSetRequest$ = [3, n0, _DTSR,
+    0,
+    [_cl, _ser, _tS, _f],
+    [0, 0, 0, 2], 3
+];
+var DeleteTaskSetResponse$ = [3, n0, _DTSRe,
+    0,
+    [_tS],
+    [() => TaskSet$]
+];
+var Deployment$ = [3, n0, _D,
+    0,
+    [_i, _s, _tD, _dC, _pCe, _rCu, _fT, _cAr, _uA, _cPS, _lT, _pV, _pF, _nC, _rS, _rSR, _sCC, _sCR, _vCo, _fES, _vLC],
+    [0, 0, 0, 1, 1, 1, 1, 4, 4, () => CapacityProviderStrategy, 0, 0, 0, () => NetworkConfiguration$, 0, 0, () => ServiceConnectConfiguration$, () => ServiceConnectServiceResourceList, () => ServiceVolumeConfigurations, () => DeploymentEphemeralStorage$, () => VpcLatticeConfigurations]
+];
+var DeploymentAlarms$ = [3, n0, _DA,
+    0,
+    [_aN, _rol, _enab],
+    [64 | 0, 2, 2], 3
+];
+var DeploymentCircuitBreaker$ = [3, n0, _DCB,
+    0,
+    [_enab, _rol],
+    [2, 2], 2
+];
+var DeploymentConfiguration$ = [3, n0, _DC,
+    0,
+    [_dCB, _mPa, _mHP, _al, _str, _bTIM, _lH, _lCi, _cC],
+    [() => DeploymentCircuitBreaker$, 1, 1, () => DeploymentAlarms$, 0, 1, () => DeploymentLifecycleHookList, () => LinearConfiguration$, () => CanaryConfiguration$]
+];
+var DeploymentController$ = [3, n0, _DCe,
+    0,
+    [_t],
+    [0], 1
+];
+var DeploymentEphemeralStorage$ = [3, n0, _DES,
+    0,
+    [_kKI],
+    [0]
+];
+var DeploymentLifecycleHook$ = [3, n0, _DLH,
+    0,
+    [_hTA, _rA, _lSi, _hD],
+    [0, 0, 64 | 0, 15]
+];
+var DeregisterContainerInstanceRequest$ = [3, n0, _DCIR,
+    0,
+    [_cI, _cl, _f],
+    [0, 0, 2], 1
+];
+var DeregisterContainerInstanceResponse$ = [3, n0, _DCIRe,
+    0,
+    [_cI],
+    [() => ContainerInstance$]
+];
+var DeregisterTaskDefinitionRequest$ = [3, n0, _DTDRer,
+    0,
+    [_tD],
+    [0], 1
+];
+var DeregisterTaskDefinitionResponse$ = [3, n0, _DTDRere,
+    0,
+    [_tD],
+    [() => TaskDefinition$]
+];
+var DescribeCapacityProvidersRequest$ = [3, n0, _DCPRes,
+    0,
+    [_cPap, _cl, _inc, _mRa, _nT],
+    [64 | 0, 0, 64 | 0, 1, 0]
+];
+var DescribeCapacityProvidersResponse$ = [3, n0, _DCPResc,
+    0,
+    [_cPap, _fa, _nT],
+    [[() => CapacityProviders, 0], () => Failures, 0]
+];
+var DescribeClustersRequest$ = [3, n0, _DCRes,
+    0,
+    [_clu, _inc],
+    [64 | 0, 64 | 0]
+];
+var DescribeClustersResponse$ = [3, n0, _DCResc,
+    0,
+    [_clu, _fa],
+    [() => Clusters, () => Failures]
+];
+var DescribeContainerInstancesRequest$ = [3, n0, _DCIRes,
+    0,
+    [_cIo, _cl, _inc],
+    [64 | 0, 0, 64 | 0], 1
+];
+var DescribeContainerInstancesResponse$ = [3, n0, _DCIResc,
+    0,
+    [_cIo, _fa],
+    [() => ContainerInstances, () => Failures]
+];
+var DescribeExpressGatewayServiceRequest$ = [3, n0, _DEGSRes,
+    0,
+    [_sA, _inc],
+    [0, 64 | 0], 1
+];
+var DescribeExpressGatewayServiceResponse$ = [3, n0, _DEGSResc,
+    0,
+    [_ser],
+    [() => ECSExpressGatewayService$]
+];
+var DescribeServiceDeploymentsRequest$ = [3, n0, _DSDR,
+    0,
+    [_sDA],
+    [64 | 0], 1
+];
+var DescribeServiceDeploymentsResponse$ = [3, n0, _DSDRe,
+    0,
+    [_sD, _fa],
+    [() => ServiceDeployments, () => Failures]
+];
+var DescribeServiceRevisionsRequest$ = [3, n0, _DSRR,
+    0,
+    [_sRA],
+    [64 | 0], 1
+];
+var DescribeServiceRevisionsResponse$ = [3, n0, _DSRRe,
+    0,
+    [_sRer, _fa],
+    [() => ServiceRevisions, () => Failures]
+];
+var DescribeServicesRequest$ = [3, n0, _DSRes,
+    0,
+    [_serv, _cl, _inc],
+    [64 | 0, 0, 64 | 0], 1
+];
+var DescribeServicesResponse$ = [3, n0, _DSResc,
+    0,
+    [_serv, _fa],
+    [() => Services, () => Failures]
+];
+var DescribeTaskDefinitionRequest$ = [3, n0, _DTDRes,
+    0,
+    [_tD, _inc],
+    [0, 64 | 0], 1
+];
+var DescribeTaskDefinitionResponse$ = [3, n0, _DTDResc,
+    0,
+    [_tD, _ta],
+    [() => TaskDefinition$, () => Tags]
+];
+var DescribeTaskSetsRequest$ = [3, n0, _DTSRes,
+    0,
+    [_cl, _ser, _tSa, _inc],
+    [0, 0, 64 | 0, 64 | 0], 2
+];
+var DescribeTaskSetsResponse$ = [3, n0, _DTSResc,
+    0,
+    [_tSa, _fa],
+    [() => TaskSets, () => Failures]
+];
+var DescribeTasksRequest$ = [3, n0, _DTR,
+    0,
+    [_tas, _cl, _inc],
+    [64 | 0, 0, 64 | 0], 1
+];
+var DescribeTasksResponse$ = [3, n0, _DTRe,
+    0,
+    [_tas, _fa],
+    [() => Tasks, () => Failures]
+];
+var Device$ = [3, n0, _De,
+    0,
+    [_hP, _cPo, _pe],
+    [0, 0, 64 | 0], 1
+];
+var DiscoverPollEndpointRequest$ = [3, n0, _DPER,
+    0,
+    [_cI, _cl],
+    [0, 0]
+];
+var DiscoverPollEndpointResponse$ = [3, n0, _DPERi,
+    0,
+    [_end, _tE, _sCE],
+    [0, 0, 0]
+];
+var DockerVolumeConfiguration$ = [3, n0, _DVC,
+    0,
+    [_sco, _au, _dr, _dOr, _la],
+    [0, 2, 0, 128 | 0, 128 | 0]
+];
+var EBSTagSpecification$ = [3, n0, _EBSTS,
+    0,
+    [_rT, _ta, _pTr],
+    [0, () => Tags, 0], 1
+];
+var ECSExpressGatewayService$ = [3, n0, _ECSEGS,
+    0,
+    [_cl, _sN, _sA, _iRA, _s, _cD, _aCc, _ta, _cAr, _uA],
+    [0, 0, 0, 0, () => ExpressGatewayServiceStatus$, 0, () => ExpressGatewayServiceConfigurations, () => Tags, 4, 4]
+];
+var ECSManagedResources$ = [3, n0, _ECSMR,
+    0,
+    [_iP, _aSu, _mAe, _sSG, _lG],
+    [() => ManagedIngressPaths, () => ManagedAutoScaling$, () => ManagedMetricAlarms, () => ManagedSecurityGroups, () => ManagedLogGroups]
+];
+var EFSAuthorizationConfig$ = [3, n0, _EFSAC,
+    0,
+    [_aPIc, _ia],
+    [0, 0]
+];
+var EFSVolumeConfiguration$ = [3, n0, _EFSVC,
+    0,
+    [_fSI, _rD, _tEr, _tEP, _aCu],
+    [0, 0, 0, 1, () => EFSAuthorizationConfig$], 1
+];
+var EnvironmentFile$ = [3, n0, _EF,
+    0,
+    [_v, _t],
+    [0, 0], 2
+];
+var EphemeralStorage$ = [3, n0, _ES,
+    0,
+    [_sIGB],
+    [1], 1
+];
+var ExecuteCommandConfiguration$ = [3, n0, _ECC,
+    0,
+    [_kKI, _lo, _lC],
+    [0, 0, () => ExecuteCommandLogConfiguration$]
+];
+var ExecuteCommandLogConfiguration$ = [3, n0, _ECLC,
+    0,
+    [_cWLGN, _cWEE, _sBN, _sEE, _sKP],
+    [0, 2, 0, 2, 0]
+];
+var ExecuteCommandRequest$ = [3, n0, _ECR,
+    0,
+    [_com, _in, _task, _cl, _cont],
+    [0, 2, 0, 0, 0], 3
+];
+var ExecuteCommandResponse$ = [3, n0, _ECRx,
+    0,
+    [_cA, _cAo, _cNo, _in, _ses, _tA],
+    [0, 0, 0, 2, [() => Session$, 0], 0]
+];
+var ExpressGatewayContainer$ = [3, n0, _EGC,
+    0,
+    [_im, _cPon, _aLC, _rC, _com, _en, _sec],
+    [0, 1, () => ExpressGatewayServiceAwsLogsConfiguration$, () => ExpressGatewayRepositoryCredentials$, 64 | 0, () => EnvironmentVariables, () => SecretList], 1
+];
+var ExpressGatewayRepositoryCredentials$ = [3, n0, _EGRC,
+    0,
+    [_cPr],
+    [0]
+];
+var ExpressGatewayScalingTarget$ = [3, n0, _EGST,
+    0,
+    [_mTC, _mTCa, _aSM, _aSTV],
+    [1, 1, 0, 1]
+];
+var ExpressGatewayServiceAwsLogsConfiguration$ = [3, n0, _EGSALC,
+    0,
+    [_lGo, _lSP],
+    [0, 0], 2
+];
+var ExpressGatewayServiceConfiguration$ = [3, n0, _EGSC,
+    0,
+    [_sRAe, _eRA, _tRA, _cp, _mem, _nC, _hCP, _pC, _sTc, _iP, _cAr],
+    [0, 0, 0, 0, 0, () => ExpressGatewayServiceNetworkConfiguration$, 0, () => ExpressGatewayContainer$, () => ExpressGatewayScalingTarget$, () => IngressPathSummaries, 4]
+];
+var ExpressGatewayServiceNetworkConfiguration$ = [3, n0, _EGSNC,
+    0,
+    [_sG, _su],
+    [64 | 0, 64 | 0]
+];
+var ExpressGatewayServiceStatus$ = [3, n0, _EGSS,
+    0,
+    [_sCt, _sR],
+    [0, 0]
+];
+var Failure$ = [3, n0, _F,
+    0,
+    [_ar, _r, _de],
+    [0, 0, 0]
+];
+var FirelensConfiguration$ = [3, n0, _FC,
+    0,
+    [_t, _o],
+    [0, 128 | 0], 1
+];
+var FSxWindowsFileServerAuthorizationConfig$ = [3, n0, _FSWFSAC,
+    0,
+    [_cPr, _do],
+    [0, 0], 2
+];
+var FSxWindowsFileServerVolumeConfiguration$ = [3, n0, _FSWFSVC,
+    0,
+    [_fSI, _rD, _aCu],
+    [0, 0, () => FSxWindowsFileServerAuthorizationConfig$], 3
+];
+var GetTaskProtectionRequest$ = [3, n0, _GTPR,
+    0,
+    [_cl, _tas],
+    [0, 64 | 0], 1
+];
+var GetTaskProtectionResponse$ = [3, n0, _GTPRe,
     0,
     [_pTro, _fa],
-    [() => ProtectedTasks, () => Failures],
+    [() => ProtectedTasks, () => Failures]
 ];
-var UpdateTaskSetRequest$ = [
-    3,
-    n0,
-    _UTSR,
+var HealthCheck$ = [3, n0, _HC,
+    0,
+    [_com, _int, _ti, _re, _sP],
+    [64 | 0, 1, 1, 1, 1], 1
+];
+var HostEntry$ = [3, n0, _HE,
+    0,
+    [_h, _iA],
+    [0, 0], 2
+];
+var HostVolumeProperties$ = [3, n0, _HVP,
+    0,
+    [_sPo],
+    [0]
+];
+var InferenceAccelerator$ = [3, n0, _IA,
+    0,
+    [_dNe, _dT],
+    [0, 0], 2
+];
+var InferenceAcceleratorOverride$ = [3, n0, _IAO,
+    0,
+    [_dNe, _dT],
+    [0, 0]
+];
+var InfrastructureOptimization$ = [3, n0, _IO,
+    0,
+    [_sIA],
+    [1]
+];
+var IngressPathSummary$ = [3, n0, _IPS,
+    0,
+    [_aT, _end],
+    [0, 0], 2
+];
+var InstanceHealthCheckResult$ = [3, n0, _IHCR,
+    0,
+    [_t, _s, _lU, _lSC],
+    [0, 0, 4, 4]
+];
+var InstanceLaunchTemplate$ = [3, n0, _ILT,
+    0,
+    [_eIPA, _nC, _sCto, _mo, _cOT, _iR, _fE],
+    [0, () => ManagedInstancesNetworkConfiguration$, () => ManagedInstancesStorageConfiguration$, 0, 0, [() => InstanceRequirementsRequest$, 0], 2], 2
+];
+var InstanceLaunchTemplateUpdate$ = [3, n0, _ILTU,
+    0,
+    [_eIPA, _nC, _sCto, _mo, _iR],
+    [0, () => ManagedInstancesNetworkConfiguration$, () => ManagedInstancesStorageConfiguration$, 0, [() => InstanceRequirementsRequest$, 0]]
+];
+var InstanceRequirementsRequest$ = [3, n0, _IRR,
+    0,
+    [_vCC, _mMB, _cM, _mGBPVC, _eIT, _iG, _sMPPOLP, _oDMPPOLP, _bM, _bP, _rHS, _nIC, _lSo, _lST, _tLSGB, _bEBM, _aTc, _aCcc, _aM, _aNc, _aTMMB, _nBG, _aIT, _mSPAPOOODP],
+    [() => VCpuCountRangeRequest$, () => MemoryMiBRequest$, [() => CpuManufacturerSet, { [_xN]: _CM }], () => MemoryGiBPerVCpuRequest$, [() => ExcludedInstanceTypeSet, { [_xN]: _EIT }], [() => InstanceGenerationSet, { [_xN]: _IG }], 1, 1, 0, 0, 2, () => NetworkInterfaceCountRequest$, 0, [() => LocalStorageTypeSet, { [_xN]: _LST }], () => TotalLocalStorageGBRequest$, () => BaselineEbsBandwidthMbpsRequest$, [() => AcceleratorTypeSet, { [_xN]: _AT }], () => AcceleratorCountRequest$, [() => AcceleratorManufacturerSet, { [_xN]: _AM }], [() => AcceleratorNameSet, { [_xN]: _AN }], () => AcceleratorTotalMemoryMiBRequest$, () => NetworkBandwidthGbpsRequest$, [() => AllowedInstanceTypeSet, { [_xN]: _AIT }], 1], 2
+];
+var InvalidParameterException$ = [-3, n0, _IPE,
+    { [_e]: _c },
+    [_me],
+    [0]
+];
+schema.TypeRegistry.for(n0).registerError(InvalidParameterException$, InvalidParameterException);
+var KernelCapabilities$ = [3, n0, _KC,
+    0,
+    [_ad, _dro],
+    [64 | 0, 64 | 0]
+];
+var KeyValuePair$ = [3, n0, _KVP,
+    0,
+    [_n, _v],
+    [0, 0]
+];
+var LimitExceededException$ = [-3, n0, _LEE,
+    { [_e]: _c },
+    [_me],
+    [0]
+];
+schema.TypeRegistry.for(n0).registerError(LimitExceededException$, LimitExceededException);
+var LinearConfiguration$ = [3, n0, _LC,
+    0,
+    [_sPt, _sBTIM],
+    [1, 1]
+];
+var LinuxParameters$ = [3, n0, _LP,
+    0,
+    [_ca, _dev, _iPE, _sMS, _tm, _mSa, _sw],
+    [() => KernelCapabilities$, () => DevicesList, 2, 1, () => TmpfsList, 1, 1]
+];
+var ListAccountSettingsRequest$ = [3, n0, _LASR,
+    0,
+    [_n, _v, _pA, _eS, _nT, _mRa],
+    [0, 0, 0, 2, 0, 1]
+];
+var ListAccountSettingsResponse$ = [3, n0, _LASRi,
+    0,
+    [_se, _nT],
+    [() => Settings, 0]
+];
+var ListAttributesRequest$ = [3, n0, _LAR,
+    0,
+    [_tT, _cl, _aNt, _aV, _nT, _mRa],
+    [0, 0, 0, 0, 0, 1], 1
+];
+var ListAttributesResponse$ = [3, n0, _LARi,
+    0,
+    [_at, _nT],
+    [() => Attributes, 0]
+];
+var ListClustersRequest$ = [3, n0, _LCR,
+    0,
+    [_nT, _mRa],
+    [0, 1]
+];
+var ListClustersResponse$ = [3, n0, _LCRi,
+    0,
+    [_cAl, _nT],
+    [64 | 0, 0]
+];
+var ListContainerInstancesRequest$ = [3, n0, _LCIR,
+    0,
+    [_cl, _fi, _nT, _mRa, _s],
+    [0, 0, 0, 1, 0]
+];
+var ListContainerInstancesResponse$ = [3, n0, _LCIRi,
+    0,
+    [_cIAo, _nT],
+    [64 | 0, 0]
+];
+var ListServiceDeploymentsRequest$ = [3, n0, _LSDR,
+    0,
+    [_ser, _cl, _s, _cAr, _nT, _mRa],
+    [0, 0, 64 | 0, () => CreatedAt$, 0, 1], 1
+];
+var ListServiceDeploymentsResponse$ = [3, n0, _LSDRi,
+    0,
+    [_sD, _nT],
+    [() => ServiceDeploymentsBrief, 0]
+];
+var ListServicesByNamespaceRequest$ = [3, n0, _LSBNR,
+    0,
+    [_na, _nT, _mRa],
+    [0, 0, 1], 1
+];
+var ListServicesByNamespaceResponse$ = [3, n0, _LSBNRi,
+    0,
+    [_sAe, _nT],
+    [64 | 0, 0]
+];
+var ListServicesRequest$ = [3, n0, _LSR,
+    0,
+    [_cl, _nT, _mRa, _lT, _sS, _rMT],
+    [0, 0, 1, 0, 0, 0]
+];
+var ListServicesResponse$ = [3, n0, _LSRi,
+    0,
+    [_sAe, _nT],
+    [64 | 0, 0]
+];
+var ListTagsForResourceRequest$ = [3, n0, _LTFRR,
+    0,
+    [_rAes],
+    [0], 1
+];
+var ListTagsForResourceResponse$ = [3, n0, _LTFRRi,
+    0,
+    [_ta],
+    [() => Tags]
+];
+var ListTaskDefinitionFamiliesRequest$ = [3, n0, _LTDFR,
+    0,
+    [_fP, _s, _nT, _mRa],
+    [0, 0, 0, 1]
+];
+var ListTaskDefinitionFamiliesResponse$ = [3, n0, _LTDFRi,
+    0,
+    [_fam, _nT],
+    [64 | 0, 0]
+];
+var ListTaskDefinitionsRequest$ = [3, n0, _LTDR,
+    0,
+    [_fP, _s, _so, _nT, _mRa],
+    [0, 0, 0, 0, 1]
+];
+var ListTaskDefinitionsResponse$ = [3, n0, _LTDRi,
+    0,
+    [_tDA, _nT],
+    [64 | 0, 0]
+];
+var ListTasksRequest$ = [3, n0, _LTR,
+    0,
+    [_cl, _cI, _fami, _nT, _mRa, _sB, _sN, _dSe, _lT],
+    [0, 0, 0, 0, 1, 0, 0, 0, 0]
+];
+var ListTasksResponse$ = [3, n0, _LTRi,
+    0,
+    [_tAa, _nT],
+    [64 | 0, 0]
+];
+var LoadBalancer$ = [3, n0, _LB,
+    0,
+    [_tGA, _lBN, _cNo, _cPon, _aCd],
+    [0, 0, 0, 1, () => AdvancedConfiguration$]
+];
+var LogConfiguration$ = [3, n0, _LCo,
+    0,
+    [_lD, _o, _sO],
+    [0, 128 | 0, () => SecretList], 1
+];
+var ManagedAgent$ = [3, n0, _MA,
+    0,
+    [_lSA, _n, _r, _lS],
+    [4, 0, 0, 0]
+];
+var ManagedAgentStateChange$ = [3, n0, _MASC,
+    0,
+    [_cNo, _mAN, _s, _r],
+    [0, 0, 0, 0], 3
+];
+var ManagedApplicationAutoScalingPolicy$ = [3, n0, _MAASP,
+    0,
+    [_s, _uA, _pTo, _tV, _met, _ar, _sR],
+    [0, 4, 0, 1, 0, 0, 0], 5
+];
+var ManagedAutoScaling$ = [3, n0, _MAS,
+    0,
+    [_sTca, _aASP],
+    [() => ManagedScalableTarget$, () => ManagedApplicationAutoScalingPolicies]
+];
+var ManagedCertificate$ = [3, n0, _MC,
+    0,
+    [_s, _uA, _dNo, _ar, _sR],
+    [0, 4, 0, 0, 0], 3
+];
+var ManagedIngressPath$ = [3, n0, _MIP,
+    0,
+    [_aT, _end, _lBo, _lBSG, _ce, _li, _ru, _tG],
+    [0, 0, () => ManagedLoadBalancer$, () => ManagedSecurityGroups, () => ManagedCertificate$, () => ManagedListener$, () => ManagedListenerRule$, () => ManagedTargetGroups], 2
+];
+var ManagedInstancesNetworkConfiguration$ = [3, n0, _MINC,
+    0,
+    [_su, _sG],
+    [64 | 0, 64 | 0]
+];
+var ManagedInstancesProvider$ = [3, n0, _MIPa,
+    0,
+    [_iRA, _iLT, _pTr, _iO],
+    [0, [() => InstanceLaunchTemplate$, 0], 0, () => InfrastructureOptimization$]
+];
+var ManagedInstancesStorageConfiguration$ = [3, n0, _MISC,
+    0,
+    [_sSGB],
+    [1]
+];
+var ManagedListener$ = [3, n0, _ML,
+    0,
+    [_s, _uA, _ar, _sR],
+    [0, 4, 0, 0], 2
+];
+var ManagedListenerRule$ = [3, n0, _MLR,
+    0,
+    [_s, _uA, _ar, _sR],
+    [0, 4, 0, 0], 2
+];
+var ManagedLoadBalancer$ = [3, n0, _MLB,
+    0,
+    [_s, _uA, _sch, _ar, _sR, _sI, _sGI],
+    [0, 4, 0, 0, 0, 64 | 0, 64 | 0], 3
+];
+var ManagedLogGroup$ = [3, n0, _MLG,
+    0,
+    [_s, _uA, _lGN, _ar, _sR],
+    [0, 4, 0, 0, 0], 3
+];
+var ManagedMetricAlarm$ = [3, n0, _MMA,
+    0,
+    [_s, _uA, _ar, _sR],
+    [0, 4, 0, 0], 2
+];
+var ManagedScalableTarget$ = [3, n0, _MST,
+    0,
+    [_s, _uA, _mC, _mCa, _ar, _sR],
+    [0, 4, 1, 1, 0, 0], 4
+];
+var ManagedScaling$ = [3, n0, _MS,
+    0,
+    [_s, _tC, _mSSS, _mSSSa, _iWP],
+    [0, 1, 1, 1, 1]
+];
+var ManagedSecurityGroup$ = [3, n0, _MSG,
+    0,
+    [_s, _uA, _ar, _sR],
+    [0, 4, 0, 0], 2
+];
+var ManagedStorageConfiguration$ = [3, n0, _MSC,
+    0,
+    [_kKI, _fESKKI],
+    [0, 0]
+];
+var ManagedTargetGroup$ = [3, n0, _MTG,
+    0,
+    [_s, _uA, _hCP, _hCPe, _po, _ar, _sR],
+    [0, 4, 0, 1, 1, 0, 0], 5
+];
+var MemoryGiBPerVCpuRequest$ = [3, n0, _MGBPVCR,
+    0,
+    [_m, _ma],
+    [1, 1]
+];
+var MemoryMiBRequest$ = [3, n0, _MMBR,
+    0,
+    [_m, _ma],
+    [1, 1], 1
+];
+var MissingVersionException$ = [-3, n0, _MVE,
+    { [_e]: _c },
+    [_me],
+    [0]
+];
+schema.TypeRegistry.for(n0).registerError(MissingVersionException$, MissingVersionException);
+var MountPoint$ = [3, n0, _MP,
+    0,
+    [_sV, _cPo, _rO],
+    [0, 0, 2]
+];
+var NamespaceNotFoundException$ = [-3, n0, _NNFE,
+    { [_e]: _c },
+    [_me],
+    [0]
+];
+schema.TypeRegistry.for(n0).registerError(NamespaceNotFoundException$, NamespaceNotFoundException);
+var NetworkBandwidthGbpsRequest$ = [3, n0, _NBGR,
+    0,
+    [_m, _ma],
+    [1, 1]
+];
+var NetworkBinding$ = [3, n0, _NB,
+    0,
+    [_bIP, _cPon, _hPo, _pr, _cPR, _hPR],
+    [0, 1, 1, 0, 0, 0]
+];
+var NetworkConfiguration$ = [3, n0, _NC,
+    0,
+    [_aCw],
+    [() => AwsVpcConfiguration$]
+];
+var NetworkInterface$ = [3, n0, _NI,
+    0,
+    [_aI, _pIA, _iAp],
+    [0, 0, 0]
+];
+var NetworkInterfaceCountRequest$ = [3, n0, _NICR,
+    0,
+    [_m, _ma],
+    [1, 1]
+];
+var NoUpdateAvailableException$ = [-3, n0, _NUAE,
+    { [_e]: _c },
+    [_me],
+    [0]
+];
+schema.TypeRegistry.for(n0).registerError(NoUpdateAvailableException$, NoUpdateAvailableException);
+var PlacementConstraint$ = [3, n0, _PC,
+    0,
+    [_t, _ex],
+    [0, 0]
+];
+var PlacementStrategy$ = [3, n0, _PS,
+    0,
+    [_t, _fie],
+    [0, 0]
+];
+var PlatformDevice$ = [3, n0, _PD,
+    0,
+    [_i, _t],
+    [0, 0], 2
+];
+var PlatformTaskDefinitionIncompatibilityException$ = [-3, n0, _PTDIE,
+    { [_e]: _c },
+    [_me],
+    [0]
+];
+schema.TypeRegistry.for(n0).registerError(PlatformTaskDefinitionIncompatibilityException$, PlatformTaskDefinitionIncompatibilityException);
+var PlatformUnknownException$ = [-3, n0, _PUE,
+    { [_e]: _c },
+    [_me],
+    [0]
+];
+schema.TypeRegistry.for(n0).registerError(PlatformUnknownException$, PlatformUnknownException);
+var PortMapping$ = [3, n0, _PM,
+    0,
+    [_cPon, _hPo, _pr, _n, _aP, _cPR],
+    [1, 1, 0, 0, 0, 0]
+];
+var ProtectedTask$ = [3, n0, _PT,
+    0,
+    [_tA, _pE, _eD],
+    [0, 2, 4]
+];
+var ProxyConfiguration$ = [3, n0, _PCr,
+    0,
+    [_cNo, _t, _pro],
+    [0, 0, () => ProxyConfigurationProperties], 1
+];
+var PutAccountSettingDefaultRequest$ = [3, n0, _PASDR,
+    0,
+    [_n, _v],
+    [0, 0], 2
+];
+var PutAccountSettingDefaultResponse$ = [3, n0, _PASDRu,
+    0,
+    [_set],
+    [() => Setting$]
+];
+var PutAccountSettingRequest$ = [3, n0, _PASR,
+    0,
+    [_n, _v, _pA],
+    [0, 0, 0], 2
+];
+var PutAccountSettingResponse$ = [3, n0, _PASRu,
+    0,
+    [_set],
+    [() => Setting$]
+];
+var PutAttributesRequest$ = [3, n0, _PAR,
+    0,
+    [_at, _cl],
+    [() => Attributes, 0], 1
+];
+var PutAttributesResponse$ = [3, n0, _PARu,
+    0,
+    [_at],
+    [() => Attributes]
+];
+var PutClusterCapacityProvidersRequest$ = [3, n0, _PCCPR,
+    0,
+    [_cl, _cPap, _dCPS],
+    [0, 64 | 0, () => CapacityProviderStrategy], 3
+];
+var PutClusterCapacityProvidersResponse$ = [3, n0, _PCCPRu,
+    0,
+    [_cl],
+    [() => Cluster$]
+];
+var RegisterContainerInstanceRequest$ = [3, n0, _RCIR,
+    0,
+    [_cl, _iID, _iIDS, _tR, _vI, _cIA, _at, _pD, _ta],
+    [0, 0, 0, () => Resources, () => VersionInfo$, 0, () => Attributes, () => PlatformDevices, () => Tags]
+];
+var RegisterContainerInstanceResponse$ = [3, n0, _RCIRe,
+    0,
+    [_cI],
+    [() => ContainerInstance$]
+];
+var RegisterTaskDefinitionRequest$ = [3, n0, _RTDR,
+    0,
+    [_fami, _cDo, _tRA, _eRA, _nM, _vo, _pCl, _rCe, _cp, _mem, _ta, _pMi, _iM, _pCr, _iAn, _eSp, _rPu, _eFI],
+    [0, () => ContainerDefinitions, 0, 0, 0, () => VolumeList, () => TaskDefinitionPlacementConstraints, 64 | 0, 0, 0, () => Tags, 0, 0, () => ProxyConfiguration$, () => InferenceAccelerators, () => EphemeralStorage$, () => RuntimePlatform$, 2], 2
+];
+var RegisterTaskDefinitionResponse$ = [3, n0, _RTDRe,
+    0,
+    [_tD, _ta],
+    [() => TaskDefinition$, () => Tags]
+];
+var RepositoryCredentials$ = [3, n0, _RC,
+    0,
+    [_cPr],
+    [0], 1
+];
+var ResolvedConfiguration$ = [3, n0, _RCe,
+    0,
+    [_lB],
+    [() => ServiceRevisionLoadBalancers]
+];
+var Resource$ = [3, n0, _R,
+    0,
+    [_n, _t, _dV, _lV, _iV, _sSV],
+    [0, 0, 1, 1, 1, 64 | 0]
+];
+var ResourceInUseException$ = [-3, n0, _RIUE,
+    { [_e]: _c },
+    [_me],
+    [0]
+];
+schema.TypeRegistry.for(n0).registerError(ResourceInUseException$, ResourceInUseException);
+var ResourceNotFoundException$ = [-3, n0, _RNFE,
+    { [_e]: _c },
+    [_me],
+    [0]
+];
+schema.TypeRegistry.for(n0).registerError(ResourceNotFoundException$, ResourceNotFoundException);
+var ResourceRequirement$ = [3, n0, _RR,
+    0,
+    [_v, _t],
+    [0, 0], 2
+];
+var Rollback$ = [3, n0, _Ro,
+    0,
+    [_r, _sAt, _sRAe],
+    [0, 4, 0]
+];
+var RunTaskRequest$ = [3, n0, _RTR,
+    0,
+    [_tD, _cPS, _cl, _cou, _eECSMT, _eEC, _g, _lT, _nC, _ov, _pCl, _pS, _pV, _pTr, _rIe, _sB, _ta, _cT, _vCo],
+    [0, () => CapacityProviderStrategy, 0, 1, 2, 2, 0, 0, () => NetworkConfiguration$, () => TaskOverride$, () => PlacementConstraints, () => PlacementStrategies, 0, 0, 0, 0, () => Tags, [0, 4], () => TaskVolumeConfigurations], 1
+];
+var RunTaskResponse$ = [3, n0, _RTRu,
+    0,
+    [_tas, _fa],
+    [() => Tasks, () => Failures]
+];
+var RuntimePlatform$ = [3, n0, _RP,
+    0,
+    [_cAp, _oSF],
+    [0, 0]
+];
+var Scale$ = [3, n0, _S,
+    0,
+    [_v, _un],
+    [1, 0]
+];
+var Secret$ = [3, n0, _Se,
+    0,
+    [_n, _vFa],
+    [0, 0], 2
+];
+var ServerException$ = [-3, n0, _SE,
+    { [_e]: _serve },
+    [_me],
+    [0]
+];
+schema.TypeRegistry.for(n0).registerError(ServerException$, ServerException);
+var Service$ = [3, n0, _Ser,
+    0,
+    [_sA, _sN, _cA, _lB, _sRe, _s, _dC, _rCu, _pCe, _lT, _cPS, _pV, _pF, _tD, _dCe, _tSa, _dep, _rA, _ev, _cAr, _cSD, _cSR, _pCl, _pS, _nC, _hCGPS, _sS, _dCep, _ta, _cB, _eECSMT, _pTr, _eEC, _aZR, _rMT],
+    [0, 0, 0, () => LoadBalancers, () => ServiceRegistries, 0, 1, 1, 1, 0, () => CapacityProviderStrategy, 0, 0, 0, () => DeploymentConfiguration$, () => TaskSets, () => Deployments, 0, () => ServiceEvents, 4, 0, () => ServiceCurrentRevisionSummaryList, () => PlacementConstraints, () => PlacementStrategies, () => NetworkConfiguration$, 1, 0, () => DeploymentController$, () => Tags, 0, 2, 0, 2, 0, 0]
+];
+var ServiceConnectAccessLogConfiguration$ = [3, n0, _SCALC,
+    0,
+    [_fo, _iQP],
+    [0, 0], 1
+];
+var ServiceConnectClientAlias$ = [3, n0, _SCCA,
+    0,
+    [_po, _dNn, _tTR],
+    [1, 0, () => ServiceConnectTestTrafficRules$], 1
+];
+var ServiceConnectConfiguration$ = [3, n0, _SCC,
+    0,
+    [_ena, _na, _serv, _lC, _aLCc],
+    [2, 0, () => ServiceConnectServiceList, () => LogConfiguration$, () => ServiceConnectAccessLogConfiguration$], 1
+];
+var ServiceConnectService$ = [3, n0, _SCS,
+    0,
+    [_pN, _dNi, _cAli, _iPO, _ti, _tl],
+    [0, 0, () => ServiceConnectClientAliasList, 1, () => TimeoutConfiguration$, () => ServiceConnectTlsConfiguration$], 1
+];
+var ServiceConnectServiceResource$ = [3, n0, _SCSR,
+    0,
+    [_dNi, _dA],
+    [0, 0]
+];
+var ServiceConnectTestTrafficHeaderMatchRules$ = [3, n0, _SCTTHMR,
+    0,
+    [_exa],
+    [0], 1
+];
+var ServiceConnectTestTrafficHeaderRules$ = [3, n0, _SCTTHR,
+    0,
+    [_n, _v],
+    [0, () => ServiceConnectTestTrafficHeaderMatchRules$], 1
+];
+var ServiceConnectTestTrafficRules$ = [3, n0, _SCTTR,
+    0,
+    [_he],
+    [() => ServiceConnectTestTrafficHeaderRules$], 1
+];
+var ServiceConnectTlsCertificateAuthority$ = [3, n0, _SCTCA,
+    0,
+    [_aPAA],
+    [0]
+];
+var ServiceConnectTlsConfiguration$ = [3, n0, _SCTC,
+    0,
+    [_iCA, _kK, _rA],
+    [() => ServiceConnectTlsCertificateAuthority$, 0, 0], 1
+];
+var ServiceCurrentRevisionSummary$ = [3, n0, _SCRS,
+    0,
+    [_ar, _rTCe, _rTCu, _pTCe],
+    [0, 1, 1, 1]
+];
+var ServiceDeployment$ = [3, n0, _SD,
+    0,
+    [_sDAe, _sA, _cA, _cAr, _sAt, _fA, _sAto, _uA, _sSR, _tSR, _s, _sR, _lSif, _dCe, _rol, _dCB, _al],
+    [0, 0, 0, 4, 4, 4, 4, 4, () => ServiceRevisionsSummaryList, () => ServiceRevisionSummary$, 0, 0, 0, () => DeploymentConfiguration$, () => Rollback$, () => ServiceDeploymentCircuitBreaker$, () => ServiceDeploymentAlarms$]
+];
+var ServiceDeploymentAlarms$ = [3, n0, _SDA,
+    0,
+    [_s, _aN, _tAN],
+    [0, 64 | 0, 64 | 0]
+];
+var ServiceDeploymentBrief$ = [3, n0, _SDB,
+    0,
+    [_sDAe, _sA, _cA, _sAt, _cAr, _fA, _tSRA, _s, _sR],
+    [0, 0, 0, 4, 4, 4, 0, 0, 0]
+];
+var ServiceDeploymentCircuitBreaker$ = [3, n0, _SDCB,
+    0,
+    [_s, _fCa, _th],
+    [0, 1, 1]
+];
+var ServiceDeploymentNotFoundException$ = [-3, n0, _SDNFE,
+    { [_e]: _c },
+    [_me],
+    [0]
+];
+schema.TypeRegistry.for(n0).registerError(ServiceDeploymentNotFoundException$, ServiceDeploymentNotFoundException);
+var ServiceEvent$ = [3, n0, _SEe,
+    0,
+    [_i, _cAr, _me],
+    [0, 4, 0]
+];
+var ServiceManagedEBSVolumeConfiguration$ = [3, n0, _SMEBSVC,
+    0,
+    [_rA, _enc, _kKI, _vT, _sIGB, _sIn, _vIR, _io, _thr, _tSag, _fTi],
+    [0, 2, 0, 0, 1, 0, 1, 1, 1, () => EBSTagSpecifications, 0], 1
+];
+var ServiceNotActiveException$ = [-3, n0, _SNAE,
+    { [_e]: _c },
+    [_me],
+    [0]
+];
+schema.TypeRegistry.for(n0).registerError(ServiceNotActiveException$, ServiceNotActiveException);
+var ServiceNotFoundException$ = [-3, n0, _SNFE,
+    { [_e]: _c },
+    [_me],
+    [0]
+];
+schema.TypeRegistry.for(n0).registerError(ServiceNotFoundException$, ServiceNotFoundException);
+var ServiceRegistry$ = [3, n0, _SR,
+    0,
+    [_rAeg, _po, _cNo, _cPon],
+    [0, 1, 0, 1]
+];
+var ServiceRevision$ = [3, n0, _SRe,
+    0,
+    [_sRAe, _sA, _cA, _tD, _cPS, _lT, _pV, _pF, _lB, _sRe, _nC, _cIon, _gDE, _sCC, _vCo, _fES, _cAr, _vLC, _rCes, _eMR],
+    [0, 0, 0, 0, () => CapacityProviderStrategy, 0, 0, 0, () => LoadBalancers, () => ServiceRegistries, () => NetworkConfiguration$, () => ContainerImages, 2, () => ServiceConnectConfiguration$, () => ServiceVolumeConfigurations, () => DeploymentEphemeralStorage$, 4, () => VpcLatticeConfigurations, () => ResolvedConfiguration$, () => ECSManagedResources$]
+];
+var ServiceRevisionLoadBalancer$ = [3, n0, _SRLB,
+    0,
+    [_tGA, _pLR],
+    [0, 0]
+];
+var ServiceRevisionSummary$ = [3, n0, _SRS,
+    0,
+    [_ar, _rTCe, _rTCu, _pTCe, _rTTW, _rPTW],
+    [0, 1, 1, 1, 1, 1]
+];
+var ServiceVolumeConfiguration$ = [3, n0, _SVC,
+    0,
+    [_n, _mEBSV],
+    [0, () => ServiceManagedEBSVolumeConfiguration$], 1
+];
+var Session$ = [3, n0, _Ses,
+    0,
+    [_sIe, _sU, _tVo],
+    [0, 0, [() => SensitiveString, 0]]
+];
+var Setting$ = [3, n0, _Set,
+    0,
+    [_n, _v, _pA, _t],
+    [0, 0, 0, 0]
+];
+var StartTaskRequest$ = [3, n0, _STR,
+    0,
+    [_cIo, _tD, _cl, _eECSMT, _eEC, _g, _nC, _ov, _pTr, _rIe, _sB, _ta, _vCo],
+    [64 | 0, 0, 0, 2, 2, 0, () => NetworkConfiguration$, () => TaskOverride$, 0, 0, 0, () => Tags, () => TaskVolumeConfigurations], 2
+];
+var StartTaskResponse$ = [3, n0, _STRt,
+    0,
+    [_tas, _fa],
+    [() => Tasks, () => Failures]
+];
+var StopServiceDeploymentRequest$ = [3, n0, _SSDR,
+    0,
+    [_sDAe, _sTto],
+    [0, 0], 1
+];
+var StopServiceDeploymentResponse$ = [3, n0, _SSDRt,
+    0,
+    [_sDAe],
+    [0]
+];
+var StopTaskRequest$ = [3, n0, _STRto,
+    0,
+    [_task, _cl, _r],
+    [0, 0, 0], 1
+];
+var StopTaskResponse$ = [3, n0, _STRtop,
+    0,
+    [_task],
+    [() => Task$]
+];
+var SubmitAttachmentStateChangesRequest$ = [3, n0, _SASCR,
+    0,
+    [_a, _cl],
+    [() => AttachmentStateChanges, 0], 1
+];
+var SubmitAttachmentStateChangesResponse$ = [3, n0, _SASCRu,
+    0,
+    [_ac],
+    [0]
+];
+var SubmitContainerStateChangeRequest$ = [3, n0, _SCSCR,
+    0,
+    [_cl, _task, _cNo, _rIu, _s, _eC, _r, _nB],
+    [0, 0, 0, 0, 0, 1, 0, () => NetworkBindings]
+];
+var SubmitContainerStateChangeResponse$ = [3, n0, _SCSCRu,
+    0,
+    [_ac],
+    [0]
+];
+var SubmitTaskStateChangeRequest$ = [3, n0, _STSCR,
+    0,
+    [_cl, _task, _s, _r, _conta, _a, _mA, _pSA, _pSAu, _eSA],
+    [0, 0, 0, 0, () => ContainerStateChanges, () => AttachmentStateChanges, () => ManagedAgentStateChanges, 4, 4, 4]
+];
+var SubmitTaskStateChangeResponse$ = [3, n0, _STSCRu,
+    0,
+    [_ac],
+    [0]
+];
+var SystemControl$ = [3, n0, _SC,
+    0,
+    [_na, _v],
+    [0, 0]
+];
+var Tag$ = [3, n0, _T,
+    0,
+    [_k, _v],
+    [0, 0]
+];
+var TagResourceRequest$ = [3, n0, _TRR,
+    0,
+    [_rAes, _ta],
+    [0, () => Tags], 2
+];
+var TagResourceResponse$ = [3, n0, _TRRa,
+    0,
+    [],
+    []
+];
+var TargetNotConnectedException$ = [-3, n0, _TNCE,
+    { [_e]: _c },
+    [_me],
+    [0]
+];
+schema.TypeRegistry.for(n0).registerError(TargetNotConnectedException$, TargetNotConnectedException);
+var TargetNotFoundException$ = [-3, n0, _TNFE,
+    { [_e]: _c },
+    [_me],
+    [0]
+];
+schema.TypeRegistry.for(n0).registerError(TargetNotFoundException$, TargetNotFoundException);
+var Task$ = [3, n0, _Ta,
+    0,
+    [_a, _at, _aZ, _cPN, _cA, _conn, _cAon, _cIA, _conta, _cp, _cAr, _dSe, _eEC, _eSA, _g, _hS, _iAn, _lS, _lT, _mem, _ov, _pV, _pF, _pSA, _pSAu, _sAt, _sB, _sCtop, _sAto, _sRt, _sAtop, _ta, _tA, _tDAa, _ve, _eSp, _fES],
+    [() => Attachments, () => Attributes, 0, 0, 0, 0, 4, 0, () => Containers, 0, 4, 0, 2, 4, 0, 0, () => InferenceAccelerators, 0, 0, 0, () => TaskOverride$, 0, 0, 4, 4, 4, 0, 0, 4, 0, 4, () => Tags, 0, 0, 1, () => EphemeralStorage$, () => TaskEphemeralStorage$]
+];
+var TaskDefinition$ = [3, n0, _TD,
+    0,
+    [_tDAa, _cDo, _fami, _tRA, _eRA, _nM, _rev, _vo, _s, _rAeq, _pCl, _comp, _rPu, _rCe, _cp, _mem, _iAn, _pMi, _iM, _pCr, _rAe, _dAe, _rB, _eSp, _eFI],
+    [0, () => ContainerDefinitions, 0, 0, 0, 0, 1, () => VolumeList, 0, () => RequiresAttributes, () => TaskDefinitionPlacementConstraints, 64 | 0, () => RuntimePlatform$, 64 | 0, 0, 0, () => InferenceAccelerators, 0, 0, () => ProxyConfiguration$, 4, 4, 0, () => EphemeralStorage$, 2]
+];
+var TaskDefinitionPlacementConstraint$ = [3, n0, _TDPC,
+    0,
+    [_t, _ex],
+    [0, 0]
+];
+var TaskEphemeralStorage$ = [3, n0, _TES,
+    0,
+    [_sIGB, _kKI],
+    [1, 0]
+];
+var TaskManagedEBSVolumeConfiguration$ = [3, n0, _TMEBSVC,
+    0,
+    [_rA, _enc, _kKI, _vT, _sIGB, _sIn, _vIR, _io, _thr, _tSag, _tP, _fTi],
+    [0, 2, 0, 0, 1, 0, 1, 1, 1, () => EBSTagSpecifications, () => TaskManagedEBSVolumeTerminationPolicy$, 0], 1
+];
+var TaskManagedEBSVolumeTerminationPolicy$ = [3, n0, _TMEBSVTP,
+    0,
+    [_dOT],
+    [2], 1
+];
+var TaskOverride$ = [3, n0, _TO,
+    0,
+    [_cO, _cp, _iAO, _eRA, _mem, _tRA, _eSp],
+    [() => ContainerOverrides, 0, () => InferenceAcceleratorOverrides, 0, 0, 0, () => EphemeralStorage$]
+];
+var TaskSet$ = [3, n0, _TS,
+    0,
+    [_i, _tSA, _sA, _cA, _sB, _eI, _s, _tD, _cDC, _pCe, _rCu, _cAr, _uA, _lT, _cPS, _pV, _pF, _nC, _lB, _sRe, _sc, _sSt, _sSA, _ta, _fES],
+    [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 4, 4, 0, () => CapacityProviderStrategy, 0, 0, () => NetworkConfiguration$, () => LoadBalancers, () => ServiceRegistries, () => Scale$, 0, 4, () => Tags, () => DeploymentEphemeralStorage$]
+];
+var TaskSetNotFoundException$ = [-3, n0, _TSNFE,
+    { [_e]: _c },
+    [_me],
+    [0]
+];
+schema.TypeRegistry.for(n0).registerError(TaskSetNotFoundException$, TaskSetNotFoundException);
+var TaskVolumeConfiguration$ = [3, n0, _TVC,
+    0,
+    [_n, _mEBSV],
+    [0, () => TaskManagedEBSVolumeConfiguration$], 1
+];
+var TimeoutConfiguration$ = [3, n0, _TC,
+    0,
+    [_iTS, _pRTS],
+    [1, 1]
+];
+var Tmpfs$ = [3, n0, _Tm,
+    0,
+    [_cPo, _si, _mO],
+    [0, 1, 64 | 0], 2
+];
+var TotalLocalStorageGBRequest$ = [3, n0, _TLSGBR,
+    0,
+    [_m, _ma],
+    [1, 1]
+];
+var Ulimit$ = [3, n0, _U,
+    0,
+    [_n, _sL, _hL],
+    [0, 1, 1], 3
+];
+var UnsupportedFeatureException$ = [-3, n0, _UFE,
+    { [_e]: _c },
+    [_me],
+    [0]
+];
+schema.TypeRegistry.for(n0).registerError(UnsupportedFeatureException$, UnsupportedFeatureException);
+var UntagResourceRequest$ = [3, n0, _URR,
+    0,
+    [_rAes, _tK],
+    [0, 64 | 0], 2
+];
+var UntagResourceResponse$ = [3, n0, _URRn,
+    0,
+    [],
+    []
+];
+var UpdateCapacityProviderRequest$ = [3, n0, _UCPR,
+    0,
+    [_n, _cl, _aSGP, _mIP],
+    [0, 0, () => AutoScalingGroupProviderUpdate$, [() => UpdateManagedInstancesProviderConfiguration$, 0]], 1
+];
+var UpdateCapacityProviderResponse$ = [3, n0, _UCPRp,
+    0,
+    [_cPa],
+    [[() => CapacityProvider$, 0]]
+];
+var UpdateClusterRequest$ = [3, n0, _UCR,
+    0,
+    [_cl, _se, _co, _sCD],
+    [0, () => ClusterSettings, () => ClusterConfiguration$, () => ClusterServiceConnectDefaultsRequest$], 1
+];
+var UpdateClusterResponse$ = [3, n0, _UCRp,
+    0,
+    [_cl],
+    [() => Cluster$]
+];
+var UpdateClusterSettingsRequest$ = [3, n0, _UCSR,
+    0,
+    [_cl, _se],
+    [0, () => ClusterSettings], 2
+];
+var UpdateClusterSettingsResponse$ = [3, n0, _UCSRp,
+    0,
+    [_cl],
+    [() => Cluster$]
+];
+var UpdateContainerAgentRequest$ = [3, n0, _UCAR,
+    0,
+    [_cI, _cl],
+    [0, 0], 1
+];
+var UpdateContainerAgentResponse$ = [3, n0, _UCARp,
+    0,
+    [_cI],
+    [() => ContainerInstance$]
+];
+var UpdateContainerInstancesStateRequest$ = [3, n0, _UCISR,
+    0,
+    [_cIo, _s, _cl],
+    [64 | 0, 0, 0], 2
+];
+var UpdateContainerInstancesStateResponse$ = [3, n0, _UCISRp,
+    0,
+    [_cIo, _fa],
+    [() => ContainerInstances, () => Failures]
+];
+var UpdatedExpressGatewayService$ = [3, n0, _UEGS,
+    0,
+    [_sA, _cl, _sN, _s, _tCa, _cAr, _uA],
+    [0, 0, 0, () => ExpressGatewayServiceStatus$, () => ExpressGatewayServiceConfiguration$, 4, 4]
+];
+var UpdateExpressGatewayServiceRequest$ = [3, n0, _UEGSR,
+    0,
+    [_sA, _eRA, _hCP, _pC, _tRA, _nC, _cp, _mem, _sTc],
+    [0, 0, 0, () => ExpressGatewayContainer$, 0, () => ExpressGatewayServiceNetworkConfiguration$, 0, 0, () => ExpressGatewayScalingTarget$], 1
+];
+var UpdateExpressGatewayServiceResponse$ = [3, n0, _UEGSRp,
+    0,
+    [_ser],
+    [() => UpdatedExpressGatewayService$]
+];
+var UpdateInProgressException$ = [-3, n0, _UIPE,
+    { [_e]: _c },
+    [_me],
+    [0]
+];
+schema.TypeRegistry.for(n0).registerError(UpdateInProgressException$, UpdateInProgressException);
+var UpdateManagedInstancesProviderConfiguration$ = [3, n0, _UMIPC,
+    0,
+    [_iRA, _iLT, _pTr, _iO],
+    [0, [() => InstanceLaunchTemplateUpdate$, 0], 0, () => InfrastructureOptimization$], 2
+];
+var UpdateServicePrimaryTaskSetRequest$ = [3, n0, _USPTSR,
+    0,
+    [_cl, _ser, _pTS],
+    [0, 0, 0], 3
+];
+var UpdateServicePrimaryTaskSetResponse$ = [3, n0, _USPTSRp,
+    0,
+    [_tS],
+    [() => TaskSet$]
+];
+var UpdateServiceRequest$ = [3, n0, _USR,
+    0,
+    [_ser, _cl, _dC, _tD, _cPS, _dCe, _aZR, _nC, _pCl, _pS, _pV, _fND, _hCGPS, _dCep, _eEC, _eECSMT, _lB, _pTr, _sRe, _sCC, _vCo, _vLC],
+    [0, 0, 1, 0, () => CapacityProviderStrategy, () => DeploymentConfiguration$, 0, () => NetworkConfiguration$, () => PlacementConstraints, () => PlacementStrategies, 0, 2, 1, () => DeploymentController$, 2, 2, () => LoadBalancers, 0, () => ServiceRegistries, () => ServiceConnectConfiguration$, () => ServiceVolumeConfigurations, () => VpcLatticeConfigurations], 1
+];
+var UpdateServiceResponse$ = [3, n0, _USRp,
+    0,
+    [_ser],
+    [() => Service$]
+];
+var UpdateTaskProtectionRequest$ = [3, n0, _UTPR,
+    0,
+    [_cl, _tas, _pE, _eIM],
+    [0, 64 | 0, 2, 1], 3
+];
+var UpdateTaskProtectionResponse$ = [3, n0, _UTPRp,
+    0,
+    [_pTro, _fa],
+    [() => ProtectedTasks, () => Failures]
+];
+var UpdateTaskSetRequest$ = [3, n0, _UTSR,
     0,
     [_cl, _ser, _tS, _sc],
-    [0, 0, 0, () => Scale$],
+    [0, 0, 0, () => Scale$], 4
 ];
-var UpdateTaskSetResponse$ = [3, n0, _UTSRp, 0, [_tS], [() => TaskSet$]];
-var VCpuCountRangeRequest$ = [3, n0, _VCCRR, 0, [_m, _ma], [1, 1]];
-var VersionInfo$ = [3, n0, _VI, 0, [_aVg, _aH, _dVo], [0, 0, 0]];
-var Volume$ = [
-    3,
-    n0,
-    _V,
+var UpdateTaskSetResponse$ = [3, n0, _UTSRp,
+    0,
+    [_tS],
+    [() => TaskSet$]
+];
+var VCpuCountRangeRequest$ = [3, n0, _VCCRR,
+    0,
+    [_m, _ma],
+    [1, 1], 1
+];
+var VersionInfo$ = [3, n0, _VI,
+    0,
+    [_aVg, _aH, _dVo],
+    [0, 0, 0]
+];
+var Volume$ = [3, n0, _V,
     0,
     [_n, _ho, _dVC, _eVC, _fWFSVC, _cAL],
-    [
-        0,
-        () => HostVolumeProperties$,
-        () => DockerVolumeConfiguration$,
-        () => EFSVolumeConfiguration$,
-        () => FSxWindowsFileServerVolumeConfiguration$,
-        2,
-    ],
+    [0, () => HostVolumeProperties$, () => DockerVolumeConfiguration$, () => EFSVolumeConfiguration$, () => FSxWindowsFileServerVolumeConfiguration$, 2]
 ];
-var VolumeFrom$ = [3, n0, _VF, 0, [_sCo, _rO], [0, 2]];
-var VpcLatticeConfiguration$ = [3, n0, _VLC, 0, [_rA, _tGA, _pN], [0, 0, 0]];
+var VolumeFrom$ = [3, n0, _VF,
+    0,
+    [_sCo, _rO],
+    [0, 2]
+];
+var VpcLatticeConfiguration$ = [3, n0, _VLC,
+    0,
+    [_rA, _tGA, _pN],
+    [0, 0, 0], 3
+];
 var ECSServiceException$ = [-3, _sm, "ECSServiceException", 0, [], []];
 schema.TypeRegistry.for(_sm).registerError(ECSServiceException$, ECSServiceException);
-var AcceleratorManufacturerSet = [1, n0, _AMS, 0, [0, { [_xN]: _it }]];
-var AcceleratorNameSet = [1, n0, _ANS, 0, [0, { [_xN]: _it }]];
-var AcceleratorTypeSet = [1, n0, _ATS, 0, [0, { [_xN]: _it }]];
-var AllowedInstanceTypeSet = [1, n0, _AITS, 0, [0, { [_xN]: _it }]];
-var AttachmentDetails = [1, n0, _AD, 0, () => KeyValuePair$];
-var Attachments = [1, n0, _Att, 0, () => Attachment$];
-var AttachmentStateChanges = [1, n0, _ASCt, 0, () => AttachmentStateChange$];
-var Attributes = [1, n0, _Attr, 0, () => Attribute$];
-var CapacityProviders = [1, n0, _CPa, 0, [() => CapacityProvider$, 0]];
-var CapacityProviderStrategy = [1, n0, _CPS, 0, () => CapacityProviderStrategyItem$];
-var Clusters = [1, n0, _Cl, 0, () => Cluster$];
-var ClusterSettings = [1, n0, _CSl, 0, () => ClusterSetting$];
-var ContainerDefinitions = [1, n0, _CDon, 0, () => ContainerDefinition$];
-var ContainerDependencies = [1, n0, _CDont, 0, () => ContainerDependency$];
-var ContainerImages = [1, n0, _CIon, 0, () => ContainerImage$];
-var ContainerInstances = [1, n0, _CIont, 0, () => ContainerInstance$];
-var ContainerOverrides = [1, n0, _COo, 0, () => ContainerOverride$];
-var Containers = [1, n0, _Con, 0, () => Container$];
-var ContainerStateChanges = [1, n0, _CSCo, 0, () => ContainerStateChange$];
-var CpuManufacturerSet = [1, n0, _CMS, 0, [0, { [_xN]: _it }]];
-var DeploymentLifecycleHookList = [1, n0, _DLHL, 0, () => DeploymentLifecycleHook$];
-var Deployments = [1, n0, _Dep, 0, () => Deployment$];
-var DevicesList = [1, n0, _DL, 0, () => Device$];
-var EBSTagSpecifications = [1, n0, _EBSTSa, 0, () => EBSTagSpecification$];
-var EnvironmentFiles = [1, n0, _EFn, 0, () => EnvironmentFile$];
-var EnvironmentVariables = [1, n0, _EV, 0, () => KeyValuePair$];
-var ExcludedInstanceTypeSet = [1, n0, _EITS, 0, [0, { [_xN]: _it }]];
-var ExpressGatewayServiceConfigurations = [
-    1,
-    n0,
-    _EGSCx,
-    0,
-    () => ExpressGatewayServiceConfiguration$,
+var AcceleratorManufacturerSet = [1, n0, _AMS,
+    0, [0,
+        { [_xN]: _it }]
 ];
-var Failures = [1, n0, _Fa, 0, () => Failure$];
-var HostEntryList = [1, n0, _HEL, 0, () => HostEntry$];
-var InferenceAcceleratorOverrides = [1, n0, _IAOn, 0, () => InferenceAcceleratorOverride$];
-var InferenceAccelerators = [1, n0, _IAn, 0, () => InferenceAccelerator$];
-var IngressPathSummaries = [1, n0, _IPSn, 0, () => IngressPathSummary$];
-var InstanceGenerationSet = [1, n0, _IGS, 0, [0, { [_xN]: _it }]];
-var InstanceHealthCheckResultList = [1, n0, _IHCRL, 0, () => InstanceHealthCheckResult$];
-var LoadBalancers = [1, n0, _LBo, 0, () => LoadBalancer$];
-var LocalStorageTypeSet = [1, n0, _LSTS, 0, [0, { [_xN]: _it }]];
-var ManagedAgents = [1, n0, _MAa, 0, () => ManagedAgent$];
-var ManagedAgentStateChanges = [1, n0, _MASCa, 0, () => ManagedAgentStateChange$];
-var ManagedApplicationAutoScalingPolicies = [
-    1,
-    n0,
-    _MAASPa,
-    0,
-    () => ManagedApplicationAutoScalingPolicy$,
+var AcceleratorNameSet = [1, n0, _ANS,
+    0, [0,
+        { [_xN]: _it }]
 ];
-var ManagedIngressPaths = [1, n0, _MIPan, 0, () => ManagedIngressPath$];
-var ManagedLogGroups = [1, n0, _MLGa, 0, () => ManagedLogGroup$];
-var ManagedMetricAlarms = [1, n0, _MMAa, 0, () => ManagedMetricAlarm$];
-var ManagedSecurityGroups = [1, n0, _MSGa, 0, () => ManagedSecurityGroup$];
-var ManagedTargetGroups = [1, n0, _MTGa, 0, () => ManagedTargetGroup$];
-var MountPointList = [1, n0, _MPL, 0, () => MountPoint$];
-var NetworkBindings = [1, n0, _NBe, 0, () => NetworkBinding$];
-var NetworkInterfaces = [1, n0, _NIe, 0, () => NetworkInterface$];
-var PlacementConstraints = [1, n0, _PCl, 0, () => PlacementConstraint$];
-var PlacementStrategies = [1, n0, _PSl, 0, () => PlacementStrategy$];
-var PlatformDevices = [1, n0, _PDl, 0, () => PlatformDevice$];
-var PortMappingList = [1, n0, _PML, 0, () => PortMapping$];
-var ProtectedTasks = [1, n0, _PTr, 0, () => ProtectedTask$];
-var ProxyConfigurationProperties = [1, n0, _PCP, 0, () => KeyValuePair$];
-var RequiresAttributes = [1, n0, _RA, 0, () => Attribute$];
-var ResourceRequirements = [1, n0, _RRe, 0, () => ResourceRequirement$];
-var Resources = [1, n0, _Re, 0, () => Resource$];
-var SecretList = [1, n0, _SL, 0, () => Secret$];
-var ServiceConnectClientAliasList = [1, n0, _SCCAL, 0, () => ServiceConnectClientAlias$];
-var ServiceConnectServiceList = [1, n0, _SCSL, 0, () => ServiceConnectService$];
-var ServiceConnectServiceResourceList = [1, n0, _SCSRL, 0, () => ServiceConnectServiceResource$];
-var ServiceCurrentRevisionSummaryList = [1, n0, _SCRSL, 0, () => ServiceCurrentRevisionSummary$];
-var ServiceDeployments = [1, n0, _SDe, 0, () => ServiceDeployment$];
-var ServiceDeploymentsBrief = [1, n0, _SDBe, 0, () => ServiceDeploymentBrief$];
-var ServiceEvents = [1, n0, _SEer, 0, () => ServiceEvent$];
-var ServiceRegistries = [1, n0, _SRer, 0, () => ServiceRegistry$];
-var ServiceRevisionLoadBalancers = [1, n0, _SRLBe, 0, () => ServiceRevisionLoadBalancer$];
-var ServiceRevisions = [1, n0, _SRerv, 0, () => ServiceRevision$];
-var ServiceRevisionsSummaryList = [1, n0, _SRSL, 0, () => ServiceRevisionSummary$];
-var Services = [1, n0, _Serv, 0, () => Service$];
-var ServiceVolumeConfigurations = [1, n0, _SVCe, 0, () => ServiceVolumeConfiguration$];
-var Settings = [1, n0, _Sett, 0, () => Setting$];
-var Statistics = [1, n0, _St, 0, () => KeyValuePair$];
-var SystemControls = [1, n0, _SCy, 0, () => SystemControl$];
-var Tags = [1, n0, _Tag, 0, () => Tag$];
-var TaskDefinitionList = [1, n0, _TDL, 0, () => TaskDefinition$];
-var TaskDefinitionPlacementConstraints = [1, n0, _TDPCa, 0, () => TaskDefinitionPlacementConstraint$];
-var Tasks = [1, n0, _Tas, 0, () => Task$];
-var TaskSets = [1, n0, _TSa, 0, () => TaskSet$];
-var TaskVolumeConfigurations = [1, n0, _TVCa, 0, () => TaskVolumeConfiguration$];
-var TmpfsList = [1, n0, _TL, 0, () => Tmpfs$];
-var UlimitList = [1, n0, _UL, 0, () => Ulimit$];
-var VolumeFromList = [1, n0, _VFL, 0, () => VolumeFrom$];
-var VolumeList = [1, n0, _VL, 0, () => Volume$];
-var VpcLatticeConfigurations = [1, n0, _VLCp, 0, () => VpcLatticeConfiguration$];
-var CreateCapacityProvider$ = [
-    9,
-    n0,
-    _CCP,
-    0,
-    () => CreateCapacityProviderRequest$,
-    () => CreateCapacityProviderResponse$,
+var AcceleratorTypeSet = [1, n0, _ATS,
+    0, [0,
+        { [_xN]: _it }]
 ];
-var CreateCluster$ = [
-    9,
-    n0,
-    _CCr,
-    0,
-    () => CreateClusterRequest$,
-    () => CreateClusterResponse$,
+var AllowedInstanceTypeSet = [1, n0, _AITS,
+    0, [0,
+        { [_xN]: _it }]
 ];
-var CreateExpressGatewayService$ = [
-    9,
-    n0,
-    _CEGS,
-    0,
-    () => CreateExpressGatewayServiceRequest$,
-    () => CreateExpressGatewayServiceResponse$,
+var AttachmentDetails = [1, n0, _AD,
+    0, () => KeyValuePair$
 ];
-var CreateService$ = [
-    9,
-    n0,
-    _CSr,
-    0,
-    () => CreateServiceRequest$,
-    () => CreateServiceResponse$,
+var Attachments = [1, n0, _Att,
+    0, () => Attachment$
 ];
-var CreateTaskSet$ = [
-    9,
-    n0,
-    _CTS,
-    0,
-    () => CreateTaskSetRequest$,
-    () => CreateTaskSetResponse$,
+var AttachmentStateChanges = [1, n0, _ASCt,
+    0, () => AttachmentStateChange$
 ];
-var DeleteAccountSetting$ = [
-    9,
-    n0,
-    _DAS,
-    0,
-    () => DeleteAccountSettingRequest$,
-    () => DeleteAccountSettingResponse$,
+var Attributes = [1, n0, _Attr,
+    0, () => Attribute$
 ];
-var DeleteAttributes$ = [
-    9,
-    n0,
-    _DAe,
-    0,
-    () => DeleteAttributesRequest$,
-    () => DeleteAttributesResponse$,
+var CapacityProviders = [1, n0, _CPa,
+    0, [() => CapacityProvider$,
+        0]
 ];
-var DeleteCapacityProvider$ = [
-    9,
-    n0,
-    _DCP,
-    0,
-    () => DeleteCapacityProviderRequest$,
-    () => DeleteCapacityProviderResponse$,
+var CapacityProviderStrategy = [1, n0, _CPS,
+    0, () => CapacityProviderStrategyItem$
 ];
-var DeleteCluster$ = [
-    9,
-    n0,
-    _DCel,
-    0,
-    () => DeleteClusterRequest$,
-    () => DeleteClusterResponse$,
+var Clusters = [1, n0, _Cl,
+    0, () => Cluster$
 ];
-var DeleteExpressGatewayService$ = [
-    9,
-    n0,
-    _DEGS,
-    0,
-    () => DeleteExpressGatewayServiceRequest$,
-    () => DeleteExpressGatewayServiceResponse$,
+var ClusterSettings = [1, n0, _CSl,
+    0, () => ClusterSetting$
 ];
-var DeleteService$ = [
-    9,
-    n0,
-    _DS,
-    0,
-    () => DeleteServiceRequest$,
-    () => DeleteServiceResponse$,
+var ContainerDefinitions = [1, n0, _CDon,
+    0, () => ContainerDefinition$
 ];
-var DeleteTaskDefinitions$ = [
-    9,
-    n0,
-    _DTD,
-    0,
-    () => DeleteTaskDefinitionsRequest$,
-    () => DeleteTaskDefinitionsResponse$,
+var ContainerDependencies = [1, n0, _CDont,
+    0, () => ContainerDependency$
 ];
-var DeleteTaskSet$ = [
-    9,
-    n0,
-    _DTS,
-    0,
-    () => DeleteTaskSetRequest$,
-    () => DeleteTaskSetResponse$,
+var ContainerImages = [1, n0, _CIon,
+    0, () => ContainerImage$
 ];
-var DeregisterContainerInstance$ = [
-    9,
-    n0,
-    _DCI,
-    0,
-    () => DeregisterContainerInstanceRequest$,
-    () => DeregisterContainerInstanceResponse$,
+var ContainerInstances = [1, n0, _CIont,
+    0, () => ContainerInstance$
 ];
-var DeregisterTaskDefinition$ = [
-    9,
-    n0,
-    _DTDe,
-    0,
-    () => DeregisterTaskDefinitionRequest$,
-    () => DeregisterTaskDefinitionResponse$,
+var ContainerOverrides = [1, n0, _COo,
+    0, () => ContainerOverride$
 ];
-var DescribeCapacityProviders$ = [
-    9,
-    n0,
-    _DCPe,
-    0,
-    () => DescribeCapacityProvidersRequest$,
-    () => DescribeCapacityProvidersResponse$,
+var Containers = [1, n0, _Con,
+    0, () => Container$
 ];
-var DescribeClusters$ = [
-    9,
-    n0,
-    _DCes,
-    0,
-    () => DescribeClustersRequest$,
-    () => DescribeClustersResponse$,
+var ContainerStateChanges = [1, n0, _CSCo,
+    0, () => ContainerStateChange$
 ];
-var DescribeContainerInstances$ = [
-    9,
-    n0,
-    _DCIe,
-    0,
-    () => DescribeContainerInstancesRequest$,
-    () => DescribeContainerInstancesResponse$,
+var CpuManufacturerSet = [1, n0, _CMS,
+    0, [0,
+        { [_xN]: _it }]
 ];
-var DescribeExpressGatewayService$ = [
-    9,
-    n0,
-    _DEGSe,
-    0,
-    () => DescribeExpressGatewayServiceRequest$,
-    () => DescribeExpressGatewayServiceResponse$,
+var DeploymentLifecycleHookList = [1, n0, _DLHL,
+    0, () => DeploymentLifecycleHook$
 ];
-var DescribeServiceDeployments$ = [
-    9,
-    n0,
-    _DSD,
-    0,
-    () => DescribeServiceDeploymentsRequest$,
-    () => DescribeServiceDeploymentsResponse$,
+var Deployments = [1, n0, _Dep,
+    0, () => Deployment$
 ];
-var DescribeServiceRevisions$ = [
-    9,
-    n0,
-    _DSRescr,
-    0,
-    () => DescribeServiceRevisionsRequest$,
-    () => DescribeServiceRevisionsResponse$,
+var DevicesList = [1, n0, _DL,
+    0, () => Device$
 ];
-var DescribeServices$ = [
-    9,
-    n0,
-    _DSe,
-    0,
-    () => DescribeServicesRequest$,
-    () => DescribeServicesResponse$,
+var EBSTagSpecifications = [1, n0, _EBSTSa,
+    0, () => EBSTagSpecification$
 ];
-var DescribeTaskDefinition$ = [
-    9,
-    n0,
-    _DTDes,
-    0,
-    () => DescribeTaskDefinitionRequest$,
-    () => DescribeTaskDefinitionResponse$,
+var EnvironmentFiles = [1, n0, _EFn,
+    0, () => EnvironmentFile$
 ];
-var DescribeTasks$ = [
-    9,
-    n0,
-    _DT,
-    0,
-    () => DescribeTasksRequest$,
-    () => DescribeTasksResponse$,
+var EnvironmentVariables = [1, n0, _EV,
+    0, () => KeyValuePair$
 ];
-var DescribeTaskSets$ = [
-    9,
-    n0,
-    _DTSe,
-    0,
-    () => DescribeTaskSetsRequest$,
-    () => DescribeTaskSetsResponse$,
+var ExcludedInstanceTypeSet = [1, n0, _EITS,
+    0, [0,
+        { [_xN]: _it }]
 ];
-var DiscoverPollEndpoint$ = [
-    9,
-    n0,
-    _DPE,
-    0,
-    () => DiscoverPollEndpointRequest$,
-    () => DiscoverPollEndpointResponse$,
+var ExpressGatewayServiceConfigurations = [1, n0, _EGSCx,
+    0, () => ExpressGatewayServiceConfiguration$
 ];
-var ExecuteCommand$ = [
-    9,
-    n0,
-    _EC,
-    0,
-    () => ExecuteCommandRequest$,
-    () => ExecuteCommandResponse$,
+var Failures = [1, n0, _Fa,
+    0, () => Failure$
 ];
-var GetTaskProtection$ = [
-    9,
-    n0,
-    _GTP,
-    0,
-    () => GetTaskProtectionRequest$,
-    () => GetTaskProtectionResponse$,
+var HostEntryList = [1, n0, _HEL,
+    0, () => HostEntry$
 ];
-var ListAccountSettings$ = [
-    9,
-    n0,
-    _LAS,
-    0,
-    () => ListAccountSettingsRequest$,
-    () => ListAccountSettingsResponse$,
+var InferenceAcceleratorOverrides = [1, n0, _IAOn,
+    0, () => InferenceAcceleratorOverride$
 ];
-var ListAttributes$ = [
-    9,
-    n0,
-    _LA,
-    0,
-    () => ListAttributesRequest$,
-    () => ListAttributesResponse$,
+var InferenceAccelerators = [1, n0, _IAn,
+    0, () => InferenceAccelerator$
 ];
-var ListClusters$ = [
-    9,
-    n0,
-    _LCi,
-    0,
-    () => ListClustersRequest$,
-    () => ListClustersResponse$,
+var IngressPathSummaries = [1, n0, _IPSn,
+    0, () => IngressPathSummary$
 ];
-var ListContainerInstances$ = [
-    9,
-    n0,
-    _LCI,
-    0,
-    () => ListContainerInstancesRequest$,
-    () => ListContainerInstancesResponse$,
+var InstanceGenerationSet = [1, n0, _IGS,
+    0, [0,
+        { [_xN]: _it }]
 ];
-var ListServiceDeployments$ = [
-    9,
-    n0,
-    _LSD,
-    0,
-    () => ListServiceDeploymentsRequest$,
-    () => ListServiceDeploymentsResponse$,
+var InstanceHealthCheckResultList = [1, n0, _IHCRL,
+    0, () => InstanceHealthCheckResult$
 ];
-var ListServices$ = [
-    9,
-    n0,
-    _LS,
-    0,
-    () => ListServicesRequest$,
-    () => ListServicesResponse$,
+var LoadBalancers = [1, n0, _LBo,
+    0, () => LoadBalancer$
 ];
-var ListServicesByNamespace$ = [
-    9,
-    n0,
-    _LSBN,
-    0,
-    () => ListServicesByNamespaceRequest$,
-    () => ListServicesByNamespaceResponse$,
+var LocalStorageTypeSet = [1, n0, _LSTS,
+    0, [0,
+        { [_xN]: _it }]
 ];
-var ListTagsForResource$ = [
-    9,
-    n0,
-    _LTFR,
-    0,
-    () => ListTagsForResourceRequest$,
-    () => ListTagsForResourceResponse$,
+var ManagedAgents = [1, n0, _MAa,
+    0, () => ManagedAgent$
 ];
-var ListTaskDefinitionFamilies$ = [
-    9,
-    n0,
-    _LTDF,
-    0,
-    () => ListTaskDefinitionFamiliesRequest$,
-    () => ListTaskDefinitionFamiliesResponse$,
+var ManagedAgentStateChanges = [1, n0, _MASCa,
+    0, () => ManagedAgentStateChange$
 ];
-var ListTaskDefinitions$ = [
-    9,
-    n0,
-    _LTD,
-    0,
-    () => ListTaskDefinitionsRequest$,
-    () => ListTaskDefinitionsResponse$,
+var ManagedApplicationAutoScalingPolicies = [1, n0, _MAASPa,
+    0, () => ManagedApplicationAutoScalingPolicy$
 ];
-var ListTasks$ = [9, n0, _LT, 0, () => ListTasksRequest$, () => ListTasksResponse$];
-var PutAccountSetting$ = [
-    9,
-    n0,
-    _PAS,
-    0,
-    () => PutAccountSettingRequest$,
-    () => PutAccountSettingResponse$,
+var ManagedIngressPaths = [1, n0, _MIPan,
+    0, () => ManagedIngressPath$
 ];
-var PutAccountSettingDefault$ = [
-    9,
-    n0,
-    _PASD,
-    0,
-    () => PutAccountSettingDefaultRequest$,
-    () => PutAccountSettingDefaultResponse$,
+var ManagedLogGroups = [1, n0, _MLGa,
+    0, () => ManagedLogGroup$
 ];
-var PutAttributes$ = [
-    9,
-    n0,
-    _PA,
-    0,
-    () => PutAttributesRequest$,
-    () => PutAttributesResponse$,
+var ManagedMetricAlarms = [1, n0, _MMAa,
+    0, () => ManagedMetricAlarm$
 ];
-var PutClusterCapacityProviders$ = [
-    9,
-    n0,
-    _PCCP,
-    0,
-    () => PutClusterCapacityProvidersRequest$,
-    () => PutClusterCapacityProvidersResponse$,
+var ManagedSecurityGroups = [1, n0, _MSGa,
+    0, () => ManagedSecurityGroup$
 ];
-var RegisterContainerInstance$ = [
-    9,
-    n0,
-    _RCI,
-    0,
-    () => RegisterContainerInstanceRequest$,
-    () => RegisterContainerInstanceResponse$,
+var ManagedTargetGroups = [1, n0, _MTGa,
+    0, () => ManagedTargetGroup$
 ];
-var RegisterTaskDefinition$ = [
-    9,
-    n0,
-    _RTD,
-    0,
-    () => RegisterTaskDefinitionRequest$,
-    () => RegisterTaskDefinitionResponse$,
+var MountPointList = [1, n0, _MPL,
+    0, () => MountPoint$
 ];
-var RunTask$ = [9, n0, _RT, 0, () => RunTaskRequest$, () => RunTaskResponse$];
-var StartTask$ = [9, n0, _ST, 0, () => StartTaskRequest$, () => StartTaskResponse$];
-var StopServiceDeployment$ = [
-    9,
-    n0,
-    _SSD,
-    0,
-    () => StopServiceDeploymentRequest$,
-    () => StopServiceDeploymentResponse$,
+var NetworkBindings = [1, n0, _NBe,
+    0, () => NetworkBinding$
 ];
-var StopTask$ = [9, n0, _STt, 0, () => StopTaskRequest$, () => StopTaskResponse$];
-var SubmitAttachmentStateChanges$ = [
-    9,
-    n0,
-    _SASC,
-    0,
-    () => SubmitAttachmentStateChangesRequest$,
-    () => SubmitAttachmentStateChangesResponse$,
+var NetworkInterfaces = [1, n0, _NIe,
+    0, () => NetworkInterface$
 ];
-var SubmitContainerStateChange$ = [
-    9,
-    n0,
-    _SCSC,
-    0,
-    () => SubmitContainerStateChangeRequest$,
-    () => SubmitContainerStateChangeResponse$,
+var PlacementConstraints = [1, n0, _PCl,
+    0, () => PlacementConstraint$
 ];
-var SubmitTaskStateChange$ = [
-    9,
-    n0,
-    _STSC,
-    0,
-    () => SubmitTaskStateChangeRequest$,
-    () => SubmitTaskStateChangeResponse$,
+var PlacementStrategies = [1, n0, _PSl,
+    0, () => PlacementStrategy$
 ];
-var TagResource$ = [9, n0, _TR, 0, () => TagResourceRequest$, () => TagResourceResponse$];
-var UntagResource$ = [
-    9,
-    n0,
-    _UR,
-    0,
-    () => UntagResourceRequest$,
-    () => UntagResourceResponse$,
+var PlatformDevices = [1, n0, _PDl,
+    0, () => PlatformDevice$
 ];
-var UpdateCapacityProvider$ = [
-    9,
-    n0,
-    _UCP,
-    0,
-    () => UpdateCapacityProviderRequest$,
-    () => UpdateCapacityProviderResponse$,
+var PortMappingList = [1, n0, _PML,
+    0, () => PortMapping$
 ];
-var UpdateCluster$ = [
-    9,
-    n0,
-    _UC,
-    0,
-    () => UpdateClusterRequest$,
-    () => UpdateClusterResponse$,
+var ProtectedTasks = [1, n0, _PTr,
+    0, () => ProtectedTask$
 ];
-var UpdateClusterSettings$ = [
-    9,
-    n0,
-    _UCS,
-    0,
-    () => UpdateClusterSettingsRequest$,
-    () => UpdateClusterSettingsResponse$,
+var ProxyConfigurationProperties = [1, n0, _PCP,
+    0, () => KeyValuePair$
 ];
-var UpdateContainerAgent$ = [
-    9,
-    n0,
-    _UCA,
-    0,
-    () => UpdateContainerAgentRequest$,
-    () => UpdateContainerAgentResponse$,
+var RequiresAttributes = [1, n0, _RA,
+    0, () => Attribute$
 ];
-var UpdateContainerInstancesState$ = [
-    9,
-    n0,
-    _UCIS,
-    0,
-    () => UpdateContainerInstancesStateRequest$,
-    () => UpdateContainerInstancesStateResponse$,
+var ResourceRequirements = [1, n0, _RRe,
+    0, () => ResourceRequirement$
 ];
-var UpdateExpressGatewayService$ = [
-    9,
-    n0,
-    _UEGSp,
-    0,
-    () => UpdateExpressGatewayServiceRequest$,
-    () => UpdateExpressGatewayServiceResponse$,
+var Resources = [1, n0, _Re,
+    0, () => Resource$
 ];
-var UpdateService$ = [
-    9,
-    n0,
-    _US,
-    0,
-    () => UpdateServiceRequest$,
-    () => UpdateServiceResponse$,
+var SecretList = [1, n0, _SL,
+    0, () => Secret$
 ];
-var UpdateServicePrimaryTaskSet$ = [
-    9,
-    n0,
-    _USPTS,
-    0,
-    () => UpdateServicePrimaryTaskSetRequest$,
-    () => UpdateServicePrimaryTaskSetResponse$,
+var ServiceConnectClientAliasList = [1, n0, _SCCAL,
+    0, () => ServiceConnectClientAlias$
 ];
-var UpdateTaskProtection$ = [
-    9,
-    n0,
-    _UTP,
-    0,
-    () => UpdateTaskProtectionRequest$,
-    () => UpdateTaskProtectionResponse$,
+var ServiceConnectServiceList = [1, n0, _SCSL,
+    0, () => ServiceConnectService$
 ];
-var UpdateTaskSet$ = [
-    9,
-    n0,
-    _UTS,
-    0,
-    () => UpdateTaskSetRequest$,
-    () => UpdateTaskSetResponse$,
+var ServiceConnectServiceResourceList = [1, n0, _SCSRL,
+    0, () => ServiceConnectServiceResource$
+];
+var ServiceCurrentRevisionSummaryList = [1, n0, _SCRSL,
+    0, () => ServiceCurrentRevisionSummary$
+];
+var ServiceDeployments = [1, n0, _SDe,
+    0, () => ServiceDeployment$
+];
+var ServiceDeploymentsBrief = [1, n0, _SDBe,
+    0, () => ServiceDeploymentBrief$
+];
+var ServiceEvents = [1, n0, _SEer,
+    0, () => ServiceEvent$
+];
+var ServiceRegistries = [1, n0, _SRer,
+    0, () => ServiceRegistry$
+];
+var ServiceRevisionLoadBalancers = [1, n0, _SRLBe,
+    0, () => ServiceRevisionLoadBalancer$
+];
+var ServiceRevisions = [1, n0, _SRerv,
+    0, () => ServiceRevision$
+];
+var ServiceRevisionsSummaryList = [1, n0, _SRSL,
+    0, () => ServiceRevisionSummary$
+];
+var Services = [1, n0, _Serv,
+    0, () => Service$
+];
+var ServiceVolumeConfigurations = [1, n0, _SVCe,
+    0, () => ServiceVolumeConfiguration$
+];
+var Settings = [1, n0, _Sett,
+    0, () => Setting$
+];
+var Statistics = [1, n0, _St,
+    0, () => KeyValuePair$
+];
+var SystemControls = [1, n0, _SCy,
+    0, () => SystemControl$
+];
+var Tags = [1, n0, _Tag,
+    0, () => Tag$
+];
+var TaskDefinitionList = [1, n0, _TDL,
+    0, () => TaskDefinition$
+];
+var TaskDefinitionPlacementConstraints = [1, n0, _TDPCa,
+    0, () => TaskDefinitionPlacementConstraint$
+];
+var Tasks = [1, n0, _Tas,
+    0, () => Task$
+];
+var TaskSets = [1, n0, _TSa,
+    0, () => TaskSet$
+];
+var TaskVolumeConfigurations = [1, n0, _TVCa,
+    0, () => TaskVolumeConfiguration$
+];
+var TmpfsList = [1, n0, _TL,
+    0, () => Tmpfs$
+];
+var UlimitList = [1, n0, _UL,
+    0, () => Ulimit$
+];
+var VolumeFromList = [1, n0, _VFL,
+    0, () => VolumeFrom$
+];
+var VolumeList = [1, n0, _VL,
+    0, () => Volume$
+];
+var VpcLatticeConfigurations = [1, n0, _VLCp,
+    0, () => VpcLatticeConfiguration$
+];
+var CreateCapacityProvider$ = [9, n0, _CCP,
+    0, () => CreateCapacityProviderRequest$, () => CreateCapacityProviderResponse$
+];
+var CreateCluster$ = [9, n0, _CCr,
+    0, () => CreateClusterRequest$, () => CreateClusterResponse$
+];
+var CreateExpressGatewayService$ = [9, n0, _CEGS,
+    0, () => CreateExpressGatewayServiceRequest$, () => CreateExpressGatewayServiceResponse$
+];
+var CreateService$ = [9, n0, _CSr,
+    0, () => CreateServiceRequest$, () => CreateServiceResponse$
+];
+var CreateTaskSet$ = [9, n0, _CTS,
+    0, () => CreateTaskSetRequest$, () => CreateTaskSetResponse$
+];
+var DeleteAccountSetting$ = [9, n0, _DAS,
+    0, () => DeleteAccountSettingRequest$, () => DeleteAccountSettingResponse$
+];
+var DeleteAttributes$ = [9, n0, _DAe,
+    0, () => DeleteAttributesRequest$, () => DeleteAttributesResponse$
+];
+var DeleteCapacityProvider$ = [9, n0, _DCP,
+    0, () => DeleteCapacityProviderRequest$, () => DeleteCapacityProviderResponse$
+];
+var DeleteCluster$ = [9, n0, _DCel,
+    0, () => DeleteClusterRequest$, () => DeleteClusterResponse$
+];
+var DeleteExpressGatewayService$ = [9, n0, _DEGS,
+    0, () => DeleteExpressGatewayServiceRequest$, () => DeleteExpressGatewayServiceResponse$
+];
+var DeleteService$ = [9, n0, _DS,
+    0, () => DeleteServiceRequest$, () => DeleteServiceResponse$
+];
+var DeleteTaskDefinitions$ = [9, n0, _DTD,
+    0, () => DeleteTaskDefinitionsRequest$, () => DeleteTaskDefinitionsResponse$
+];
+var DeleteTaskSet$ = [9, n0, _DTS,
+    0, () => DeleteTaskSetRequest$, () => DeleteTaskSetResponse$
+];
+var DeregisterContainerInstance$ = [9, n0, _DCI,
+    0, () => DeregisterContainerInstanceRequest$, () => DeregisterContainerInstanceResponse$
+];
+var DeregisterTaskDefinition$ = [9, n0, _DTDe,
+    0, () => DeregisterTaskDefinitionRequest$, () => DeregisterTaskDefinitionResponse$
+];
+var DescribeCapacityProviders$ = [9, n0, _DCPe,
+    0, () => DescribeCapacityProvidersRequest$, () => DescribeCapacityProvidersResponse$
+];
+var DescribeClusters$ = [9, n0, _DCes,
+    0, () => DescribeClustersRequest$, () => DescribeClustersResponse$
+];
+var DescribeContainerInstances$ = [9, n0, _DCIe,
+    0, () => DescribeContainerInstancesRequest$, () => DescribeContainerInstancesResponse$
+];
+var DescribeExpressGatewayService$ = [9, n0, _DEGSe,
+    0, () => DescribeExpressGatewayServiceRequest$, () => DescribeExpressGatewayServiceResponse$
+];
+var DescribeServiceDeployments$ = [9, n0, _DSD,
+    0, () => DescribeServiceDeploymentsRequest$, () => DescribeServiceDeploymentsResponse$
+];
+var DescribeServiceRevisions$ = [9, n0, _DSRescr,
+    0, () => DescribeServiceRevisionsRequest$, () => DescribeServiceRevisionsResponse$
+];
+var DescribeServices$ = [9, n0, _DSe,
+    0, () => DescribeServicesRequest$, () => DescribeServicesResponse$
+];
+var DescribeTaskDefinition$ = [9, n0, _DTDes,
+    0, () => DescribeTaskDefinitionRequest$, () => DescribeTaskDefinitionResponse$
+];
+var DescribeTasks$ = [9, n0, _DT,
+    0, () => DescribeTasksRequest$, () => DescribeTasksResponse$
+];
+var DescribeTaskSets$ = [9, n0, _DTSe,
+    0, () => DescribeTaskSetsRequest$, () => DescribeTaskSetsResponse$
+];
+var DiscoverPollEndpoint$ = [9, n0, _DPE,
+    0, () => DiscoverPollEndpointRequest$, () => DiscoverPollEndpointResponse$
+];
+var ExecuteCommand$ = [9, n0, _EC,
+    0, () => ExecuteCommandRequest$, () => ExecuteCommandResponse$
+];
+var GetTaskProtection$ = [9, n0, _GTP,
+    0, () => GetTaskProtectionRequest$, () => GetTaskProtectionResponse$
+];
+var ListAccountSettings$ = [9, n0, _LAS,
+    0, () => ListAccountSettingsRequest$, () => ListAccountSettingsResponse$
+];
+var ListAttributes$ = [9, n0, _LA,
+    0, () => ListAttributesRequest$, () => ListAttributesResponse$
+];
+var ListClusters$ = [9, n0, _LCi,
+    0, () => ListClustersRequest$, () => ListClustersResponse$
+];
+var ListContainerInstances$ = [9, n0, _LCI,
+    0, () => ListContainerInstancesRequest$, () => ListContainerInstancesResponse$
+];
+var ListServiceDeployments$ = [9, n0, _LSD,
+    0, () => ListServiceDeploymentsRequest$, () => ListServiceDeploymentsResponse$
+];
+var ListServices$ = [9, n0, _LS,
+    0, () => ListServicesRequest$, () => ListServicesResponse$
+];
+var ListServicesByNamespace$ = [9, n0, _LSBN,
+    0, () => ListServicesByNamespaceRequest$, () => ListServicesByNamespaceResponse$
+];
+var ListTagsForResource$ = [9, n0, _LTFR,
+    0, () => ListTagsForResourceRequest$, () => ListTagsForResourceResponse$
+];
+var ListTaskDefinitionFamilies$ = [9, n0, _LTDF,
+    0, () => ListTaskDefinitionFamiliesRequest$, () => ListTaskDefinitionFamiliesResponse$
+];
+var ListTaskDefinitions$ = [9, n0, _LTD,
+    0, () => ListTaskDefinitionsRequest$, () => ListTaskDefinitionsResponse$
+];
+var ListTasks$ = [9, n0, _LT,
+    0, () => ListTasksRequest$, () => ListTasksResponse$
+];
+var PutAccountSetting$ = [9, n0, _PAS,
+    0, () => PutAccountSettingRequest$, () => PutAccountSettingResponse$
+];
+var PutAccountSettingDefault$ = [9, n0, _PASD,
+    0, () => PutAccountSettingDefaultRequest$, () => PutAccountSettingDefaultResponse$
+];
+var PutAttributes$ = [9, n0, _PA,
+    0, () => PutAttributesRequest$, () => PutAttributesResponse$
+];
+var PutClusterCapacityProviders$ = [9, n0, _PCCP,
+    0, () => PutClusterCapacityProvidersRequest$, () => PutClusterCapacityProvidersResponse$
+];
+var RegisterContainerInstance$ = [9, n0, _RCI,
+    0, () => RegisterContainerInstanceRequest$, () => RegisterContainerInstanceResponse$
+];
+var RegisterTaskDefinition$ = [9, n0, _RTD,
+    0, () => RegisterTaskDefinitionRequest$, () => RegisterTaskDefinitionResponse$
+];
+var RunTask$ = [9, n0, _RT,
+    0, () => RunTaskRequest$, () => RunTaskResponse$
+];
+var StartTask$ = [9, n0, _ST,
+    0, () => StartTaskRequest$, () => StartTaskResponse$
+];
+var StopServiceDeployment$ = [9, n0, _SSD,
+    0, () => StopServiceDeploymentRequest$, () => StopServiceDeploymentResponse$
+];
+var StopTask$ = [9, n0, _STt,
+    0, () => StopTaskRequest$, () => StopTaskResponse$
+];
+var SubmitAttachmentStateChanges$ = [9, n0, _SASC,
+    0, () => SubmitAttachmentStateChangesRequest$, () => SubmitAttachmentStateChangesResponse$
+];
+var SubmitContainerStateChange$ = [9, n0, _SCSC,
+    0, () => SubmitContainerStateChangeRequest$, () => SubmitContainerStateChangeResponse$
+];
+var SubmitTaskStateChange$ = [9, n0, _STSC,
+    0, () => SubmitTaskStateChangeRequest$, () => SubmitTaskStateChangeResponse$
+];
+var TagResource$ = [9, n0, _TR,
+    0, () => TagResourceRequest$, () => TagResourceResponse$
+];
+var UntagResource$ = [9, n0, _UR,
+    0, () => UntagResourceRequest$, () => UntagResourceResponse$
+];
+var UpdateCapacityProvider$ = [9, n0, _UCP,
+    0, () => UpdateCapacityProviderRequest$, () => UpdateCapacityProviderResponse$
+];
+var UpdateCluster$ = [9, n0, _UC,
+    0, () => UpdateClusterRequest$, () => UpdateClusterResponse$
+];
+var UpdateClusterSettings$ = [9, n0, _UCS,
+    0, () => UpdateClusterSettingsRequest$, () => UpdateClusterSettingsResponse$
+];
+var UpdateContainerAgent$ = [9, n0, _UCA,
+    0, () => UpdateContainerAgentRequest$, () => UpdateContainerAgentResponse$
+];
+var UpdateContainerInstancesState$ = [9, n0, _UCIS,
+    0, () => UpdateContainerInstancesStateRequest$, () => UpdateContainerInstancesStateResponse$
+];
+var UpdateExpressGatewayService$ = [9, n0, _UEGSp,
+    0, () => UpdateExpressGatewayServiceRequest$, () => UpdateExpressGatewayServiceResponse$
+];
+var UpdateService$ = [9, n0, _US,
+    0, () => UpdateServiceRequest$, () => UpdateServiceResponse$
+];
+var UpdateServicePrimaryTaskSet$ = [9, n0, _USPTS,
+    0, () => UpdateServicePrimaryTaskSetRequest$, () => UpdateServicePrimaryTaskSetResponse$
+];
+var UpdateTaskProtection$ = [9, n0, _UTP,
+    0, () => UpdateTaskProtectionRequest$, () => UpdateTaskProtectionResponse$
+];
+var UpdateTaskSet$ = [9, n0, _UTS,
+    0, () => UpdateTaskSetRequest$, () => UpdateTaskSetResponse$
 ];
 
 class CreateCapacityProviderCommand extends smithyClient.Command
@@ -8198,6 +7709,259 @@ class UpdateTaskSetCommand extends smithyClient.Command
     .build() {
 }
 
+const paginateListAccountSettings = core.createPaginator(ECSClient, ListAccountSettingsCommand, "nextToken", "nextToken", "maxResults");
+
+const paginateListAttributes = core.createPaginator(ECSClient, ListAttributesCommand, "nextToken", "nextToken", "maxResults");
+
+const paginateListClusters = core.createPaginator(ECSClient, ListClustersCommand, "nextToken", "nextToken", "maxResults");
+
+const paginateListContainerInstances = core.createPaginator(ECSClient, ListContainerInstancesCommand, "nextToken", "nextToken", "maxResults");
+
+const paginateListServicesByNamespace = core.createPaginator(ECSClient, ListServicesByNamespaceCommand, "nextToken", "nextToken", "maxResults");
+
+const paginateListServices = core.createPaginator(ECSClient, ListServicesCommand, "nextToken", "nextToken", "maxResults");
+
+const paginateListTaskDefinitionFamilies = core.createPaginator(ECSClient, ListTaskDefinitionFamiliesCommand, "nextToken", "nextToken", "maxResults");
+
+const paginateListTaskDefinitions = core.createPaginator(ECSClient, ListTaskDefinitionsCommand, "nextToken", "nextToken", "maxResults");
+
+const paginateListTasks = core.createPaginator(ECSClient, ListTasksCommand, "nextToken", "nextToken", "maxResults");
+
+const checkState$3 = async (client, input) => {
+    let reason;
+    try {
+        let result = await client.send(new DescribeServicesCommand(input));
+        reason = result;
+        try {
+            const returnComparator = () => {
+                let flat_1 = [].concat(...result.failures);
+                let projection_3 = flat_1.map((element_2) => {
+                    return element_2.reason;
+                });
+                return projection_3;
+            };
+            for (let anyStringEq_4 of returnComparator()) {
+                if (anyStringEq_4 == "MISSING") {
+                    return { state: utilWaiter.WaiterState.FAILURE, reason };
+                }
+            }
+        }
+        catch (e) { }
+        try {
+            const returnComparator = () => {
+                let flat_1 = [].concat(...result.services);
+                let projection_3 = flat_1.map((element_2) => {
+                    return element_2.status;
+                });
+                return projection_3;
+            };
+            for (let anyStringEq_4 of returnComparator()) {
+                if (anyStringEq_4 == "INACTIVE") {
+                    return { state: utilWaiter.WaiterState.SUCCESS, reason };
+                }
+            }
+        }
+        catch (e) { }
+    }
+    catch (exception) {
+        reason = exception;
+    }
+    return { state: utilWaiter.WaiterState.RETRY, reason };
+};
+const waitForServicesInactive = async (params, input) => {
+    const serviceDefaults = { minDelay: 15, maxDelay: 120 };
+    return utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState$3);
+};
+const waitUntilServicesInactive = async (params, input) => {
+    const serviceDefaults = { minDelay: 15, maxDelay: 120 };
+    const result = await utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState$3);
+    return utilWaiter.checkExceptions(result);
+};
+
+const checkState$2 = async (client, input) => {
+    let reason;
+    try {
+        let result = await client.send(new DescribeServicesCommand(input));
+        reason = result;
+        try {
+            const returnComparator = () => {
+                let flat_1 = [].concat(...result.failures);
+                let projection_3 = flat_1.map((element_2) => {
+                    return element_2.reason;
+                });
+                return projection_3;
+            };
+            for (let anyStringEq_4 of returnComparator()) {
+                if (anyStringEq_4 == "MISSING") {
+                    return { state: utilWaiter.WaiterState.FAILURE, reason };
+                }
+            }
+        }
+        catch (e) { }
+        try {
+            const returnComparator = () => {
+                let flat_1 = [].concat(...result.services);
+                let projection_3 = flat_1.map((element_2) => {
+                    return element_2.status;
+                });
+                return projection_3;
+            };
+            for (let anyStringEq_4 of returnComparator()) {
+                if (anyStringEq_4 == "DRAINING") {
+                    return { state: utilWaiter.WaiterState.FAILURE, reason };
+                }
+            }
+        }
+        catch (e) { }
+        try {
+            const returnComparator = () => {
+                let flat_1 = [].concat(...result.services);
+                let projection_3 = flat_1.map((element_2) => {
+                    return element_2.status;
+                });
+                return projection_3;
+            };
+            for (let anyStringEq_4 of returnComparator()) {
+                if (anyStringEq_4 == "INACTIVE") {
+                    return { state: utilWaiter.WaiterState.FAILURE, reason };
+                }
+            }
+        }
+        catch (e) { }
+        try {
+            const returnComparator = () => {
+                let filterRes_2 = result.services.filter((element_1) => {
+                    return (!((element_1.deployments.length == 1) && (element_1.runningCount == element_1.desiredCount)));
+                });
+                return (filterRes_2.length == 0);
+            };
+            if (returnComparator() == true) {
+                return { state: utilWaiter.WaiterState.SUCCESS, reason };
+            }
+        }
+        catch (e) { }
+    }
+    catch (exception) {
+        reason = exception;
+    }
+    return { state: utilWaiter.WaiterState.RETRY, reason };
+};
+const waitForServicesStable = async (params, input) => {
+    const serviceDefaults = { minDelay: 15, maxDelay: 120 };
+    return utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState$2);
+};
+const waitUntilServicesStable = async (params, input) => {
+    const serviceDefaults = { minDelay: 15, maxDelay: 120 };
+    const result = await utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState$2);
+    return utilWaiter.checkExceptions(result);
+};
+
+const checkState$1 = async (client, input) => {
+    let reason;
+    try {
+        let result = await client.send(new DescribeTasksCommand(input));
+        reason = result;
+        try {
+            const returnComparator = () => {
+                let flat_1 = [].concat(...result.tasks);
+                let projection_3 = flat_1.map((element_2) => {
+                    return element_2.lastStatus;
+                });
+                return projection_3;
+            };
+            for (let anyStringEq_4 of returnComparator()) {
+                if (anyStringEq_4 == "STOPPED") {
+                    return { state: utilWaiter.WaiterState.FAILURE, reason };
+                }
+            }
+        }
+        catch (e) { }
+        try {
+            const returnComparator = () => {
+                let flat_1 = [].concat(...result.failures);
+                let projection_3 = flat_1.map((element_2) => {
+                    return element_2.reason;
+                });
+                return projection_3;
+            };
+            for (let anyStringEq_4 of returnComparator()) {
+                if (anyStringEq_4 == "MISSING") {
+                    return { state: utilWaiter.WaiterState.FAILURE, reason };
+                }
+            }
+        }
+        catch (e) { }
+        try {
+            const returnComparator = () => {
+                let flat_1 = [].concat(...result.tasks);
+                let projection_3 = flat_1.map((element_2) => {
+                    return element_2.lastStatus;
+                });
+                return projection_3;
+            };
+            let allStringEq_5 = (returnComparator().length > 0);
+            for (let element_4 of returnComparator()) {
+                allStringEq_5 = allStringEq_5 && (element_4 == "RUNNING");
+            }
+            if (allStringEq_5) {
+                return { state: utilWaiter.WaiterState.SUCCESS, reason };
+            }
+        }
+        catch (e) { }
+    }
+    catch (exception) {
+        reason = exception;
+    }
+    return { state: utilWaiter.WaiterState.RETRY, reason };
+};
+const waitForTasksRunning = async (params, input) => {
+    const serviceDefaults = { minDelay: 6, maxDelay: 120 };
+    return utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState$1);
+};
+const waitUntilTasksRunning = async (params, input) => {
+    const serviceDefaults = { minDelay: 6, maxDelay: 120 };
+    const result = await utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState$1);
+    return utilWaiter.checkExceptions(result);
+};
+
+const checkState = async (client, input) => {
+    let reason;
+    try {
+        let result = await client.send(new DescribeTasksCommand(input));
+        reason = result;
+        try {
+            const returnComparator = () => {
+                let flat_1 = [].concat(...result.tasks);
+                let projection_3 = flat_1.map((element_2) => {
+                    return element_2.lastStatus;
+                });
+                return projection_3;
+            };
+            let allStringEq_5 = (returnComparator().length > 0);
+            for (let element_4 of returnComparator()) {
+                allStringEq_5 = allStringEq_5 && (element_4 == "STOPPED");
+            }
+            if (allStringEq_5) {
+                return { state: utilWaiter.WaiterState.SUCCESS, reason };
+            }
+        }
+        catch (e) { }
+    }
+    catch (exception) {
+        reason = exception;
+    }
+    return { state: utilWaiter.WaiterState.RETRY, reason };
+};
+const waitForTasksStopped = async (params, input) => {
+    const serviceDefaults = { minDelay: 6, maxDelay: 120 };
+    return utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState);
+};
+const waitUntilTasksStopped = async (params, input) => {
+    const serviceDefaults = { minDelay: 6, maxDelay: 120 };
+    const result = await utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState);
+    return utilWaiter.checkExceptions(result);
+};
+
 const commands = {
     CreateCapacityProviderCommand,
     CreateClusterCommand,
@@ -8264,262 +8028,26 @@ const commands = {
     UpdateTaskProtectionCommand,
     UpdateTaskSetCommand,
 };
+const paginators = {
+    paginateListAccountSettings,
+    paginateListAttributes,
+    paginateListClusters,
+    paginateListContainerInstances,
+    paginateListServices,
+    paginateListServicesByNamespace,
+    paginateListTaskDefinitionFamilies,
+    paginateListTaskDefinitions,
+    paginateListTasks,
+};
+const waiters = {
+    waitUntilServicesInactive,
+    waitUntilServicesStable,
+    waitUntilTasksRunning,
+    waitUntilTasksStopped,
+};
 class ECS extends ECSClient {
 }
-smithyClient.createAggregatedClient(commands, ECS);
-
-const paginateListAccountSettings = core.createPaginator(ECSClient, ListAccountSettingsCommand, "nextToken", "nextToken", "maxResults");
-
-const paginateListAttributes = core.createPaginator(ECSClient, ListAttributesCommand, "nextToken", "nextToken", "maxResults");
-
-const paginateListClusters = core.createPaginator(ECSClient, ListClustersCommand, "nextToken", "nextToken", "maxResults");
-
-const paginateListContainerInstances = core.createPaginator(ECSClient, ListContainerInstancesCommand, "nextToken", "nextToken", "maxResults");
-
-const paginateListServicesByNamespace = core.createPaginator(ECSClient, ListServicesByNamespaceCommand, "nextToken", "nextToken", "maxResults");
-
-const paginateListServices = core.createPaginator(ECSClient, ListServicesCommand, "nextToken", "nextToken", "maxResults");
-
-const paginateListTaskDefinitionFamilies = core.createPaginator(ECSClient, ListTaskDefinitionFamiliesCommand, "nextToken", "nextToken", "maxResults");
-
-const paginateListTaskDefinitions = core.createPaginator(ECSClient, ListTaskDefinitionsCommand, "nextToken", "nextToken", "maxResults");
-
-const paginateListTasks = core.createPaginator(ECSClient, ListTasksCommand, "nextToken", "nextToken", "maxResults");
-
-const checkState$3 = async (client, input) => {
-    let reason;
-    try {
-        const result = await client.send(new DescribeServicesCommand(input));
-        reason = result;
-        try {
-            const returnComparator = () => {
-                const flat_1 = [].concat(...result.failures);
-                const projection_3 = flat_1.map((element_2) => {
-                    return element_2.reason;
-                });
-                return projection_3;
-            };
-            for (const anyStringEq_4 of returnComparator()) {
-                if (anyStringEq_4 == "MISSING") {
-                    return { state: utilWaiter.WaiterState.FAILURE, reason };
-                }
-            }
-        }
-        catch (e) { }
-        try {
-            const returnComparator = () => {
-                const flat_1 = [].concat(...result.services);
-                const projection_3 = flat_1.map((element_2) => {
-                    return element_2.status;
-                });
-                return projection_3;
-            };
-            for (const anyStringEq_4 of returnComparator()) {
-                if (anyStringEq_4 == "INACTIVE") {
-                    return { state: utilWaiter.WaiterState.SUCCESS, reason };
-                }
-            }
-        }
-        catch (e) { }
-    }
-    catch (exception) {
-        reason = exception;
-    }
-    return { state: utilWaiter.WaiterState.RETRY, reason };
-};
-const waitForServicesInactive = async (params, input) => {
-    const serviceDefaults = { minDelay: 15, maxDelay: 120 };
-    return utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState$3);
-};
-const waitUntilServicesInactive = async (params, input) => {
-    const serviceDefaults = { minDelay: 15, maxDelay: 120 };
-    const result = await utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState$3);
-    return utilWaiter.checkExceptions(result);
-};
-
-const checkState$2 = async (client, input) => {
-    let reason;
-    try {
-        const result = await client.send(new DescribeServicesCommand(input));
-        reason = result;
-        try {
-            const returnComparator = () => {
-                const flat_1 = [].concat(...result.failures);
-                const projection_3 = flat_1.map((element_2) => {
-                    return element_2.reason;
-                });
-                return projection_3;
-            };
-            for (const anyStringEq_4 of returnComparator()) {
-                if (anyStringEq_4 == "MISSING") {
-                    return { state: utilWaiter.WaiterState.FAILURE, reason };
-                }
-            }
-        }
-        catch (e) { }
-        try {
-            const returnComparator = () => {
-                const flat_1 = [].concat(...result.services);
-                const projection_3 = flat_1.map((element_2) => {
-                    return element_2.status;
-                });
-                return projection_3;
-            };
-            for (const anyStringEq_4 of returnComparator()) {
-                if (anyStringEq_4 == "DRAINING") {
-                    return { state: utilWaiter.WaiterState.FAILURE, reason };
-                }
-            }
-        }
-        catch (e) { }
-        try {
-            const returnComparator = () => {
-                const flat_1 = [].concat(...result.services);
-                const projection_3 = flat_1.map((element_2) => {
-                    return element_2.status;
-                });
-                return projection_3;
-            };
-            for (const anyStringEq_4 of returnComparator()) {
-                if (anyStringEq_4 == "INACTIVE") {
-                    return { state: utilWaiter.WaiterState.FAILURE, reason };
-                }
-            }
-        }
-        catch (e) { }
-        try {
-            const returnComparator = () => {
-                const filterRes_2 = result.services.filter((element_1) => {
-                    return !(element_1.deployments.length == 1.0 && element_1.runningCount == element_1.desiredCount);
-                });
-                return filterRes_2.length == 0.0;
-            };
-            if (returnComparator() == true) {
-                return { state: utilWaiter.WaiterState.SUCCESS, reason };
-            }
-        }
-        catch (e) { }
-    }
-    catch (exception) {
-        reason = exception;
-    }
-    return { state: utilWaiter.WaiterState.RETRY, reason };
-};
-const waitForServicesStable = async (params, input) => {
-    const serviceDefaults = { minDelay: 15, maxDelay: 120 };
-    return utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState$2);
-};
-const waitUntilServicesStable = async (params, input) => {
-    const serviceDefaults = { minDelay: 15, maxDelay: 120 };
-    const result = await utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState$2);
-    return utilWaiter.checkExceptions(result);
-};
-
-const checkState$1 = async (client, input) => {
-    let reason;
-    try {
-        const result = await client.send(new DescribeTasksCommand(input));
-        reason = result;
-        try {
-            const returnComparator = () => {
-                const flat_1 = [].concat(...result.tasks);
-                const projection_3 = flat_1.map((element_2) => {
-                    return element_2.lastStatus;
-                });
-                return projection_3;
-            };
-            for (const anyStringEq_4 of returnComparator()) {
-                if (anyStringEq_4 == "STOPPED") {
-                    return { state: utilWaiter.WaiterState.FAILURE, reason };
-                }
-            }
-        }
-        catch (e) { }
-        try {
-            const returnComparator = () => {
-                const flat_1 = [].concat(...result.failures);
-                const projection_3 = flat_1.map((element_2) => {
-                    return element_2.reason;
-                });
-                return projection_3;
-            };
-            for (const anyStringEq_4 of returnComparator()) {
-                if (anyStringEq_4 == "MISSING") {
-                    return { state: utilWaiter.WaiterState.FAILURE, reason };
-                }
-            }
-        }
-        catch (e) { }
-        try {
-            const returnComparator = () => {
-                const flat_1 = [].concat(...result.tasks);
-                const projection_3 = flat_1.map((element_2) => {
-                    return element_2.lastStatus;
-                });
-                return projection_3;
-            };
-            let allStringEq_5 = returnComparator().length > 0;
-            for (const element_4 of returnComparator()) {
-                allStringEq_5 = allStringEq_5 && element_4 == "RUNNING";
-            }
-            if (allStringEq_5) {
-                return { state: utilWaiter.WaiterState.SUCCESS, reason };
-            }
-        }
-        catch (e) { }
-    }
-    catch (exception) {
-        reason = exception;
-    }
-    return { state: utilWaiter.WaiterState.RETRY, reason };
-};
-const waitForTasksRunning = async (params, input) => {
-    const serviceDefaults = { minDelay: 6, maxDelay: 120 };
-    return utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState$1);
-};
-const waitUntilTasksRunning = async (params, input) => {
-    const serviceDefaults = { minDelay: 6, maxDelay: 120 };
-    const result = await utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState$1);
-    return utilWaiter.checkExceptions(result);
-};
-
-const checkState = async (client, input) => {
-    let reason;
-    try {
-        const result = await client.send(new DescribeTasksCommand(input));
-        reason = result;
-        try {
-            const returnComparator = () => {
-                const flat_1 = [].concat(...result.tasks);
-                const projection_3 = flat_1.map((element_2) => {
-                    return element_2.lastStatus;
-                });
-                return projection_3;
-            };
-            let allStringEq_5 = returnComparator().length > 0;
-            for (const element_4 of returnComparator()) {
-                allStringEq_5 = allStringEq_5 && element_4 == "STOPPED";
-            }
-            if (allStringEq_5) {
-                return { state: utilWaiter.WaiterState.SUCCESS, reason };
-            }
-        }
-        catch (e) { }
-    }
-    catch (exception) {
-        reason = exception;
-    }
-    return { state: utilWaiter.WaiterState.RETRY, reason };
-};
-const waitForTasksStopped = async (params, input) => {
-    const serviceDefaults = { minDelay: 6, maxDelay: 120 };
-    return utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState);
-};
-const waitUntilTasksStopped = async (params, input) => {
-    const serviceDefaults = { minDelay: 6, maxDelay: 120 };
-    const result = await utilWaiter.createWaiter({ ...serviceDefaults, ...params }, input, checkState);
-    return utilWaiter.checkExceptions(result);
-};
+smithyClient.createAggregatedClient(commands, ECS, { paginators, waiters });
 
 const AcceleratorManufacturer = {
     AMAZON_WEB_SERVICES: "amazon-web-services",
@@ -9641,11 +9169,9 @@ const getRuntimeConfig = (config) => {
         authSchemePreference: config?.authSchemePreference ?? (0, node_config_provider_1.loadConfig)(core_1.NODE_AUTH_SCHEME_PREFERENCE_OPTIONS, loaderConfig),
         bodyLengthChecker: config?.bodyLengthChecker ?? util_body_length_node_1.calculateBodyLength,
         credentialDefaultProvider: config?.credentialDefaultProvider ?? credential_provider_node_1.defaultProvider,
-        defaultUserAgentProvider: config?.defaultUserAgentProvider ??
-            (0, util_user_agent_node_1.createDefaultUserAgentProvider)({ serviceId: clientSharedValues.serviceId, clientVersion: package_json_1.default.version }),
+        defaultUserAgentProvider: config?.defaultUserAgentProvider ?? (0, util_user_agent_node_1.createDefaultUserAgentProvider)({ serviceId: clientSharedValues.serviceId, clientVersion: package_json_1.default.version }),
         maxAttempts: config?.maxAttempts ?? (0, node_config_provider_1.loadConfig)(middleware_retry_1.NODE_MAX_ATTEMPT_CONFIG_OPTIONS, config),
-        region: config?.region ??
-            (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_REGION_CONFIG_OPTIONS, { ...config_resolver_1.NODE_REGION_CONFIG_FILE_OPTIONS, ...loaderConfig }),
+        region: config?.region ?? (0, node_config_provider_1.loadConfig)(config_resolver_1.NODE_REGION_CONFIG_OPTIONS, { ...config_resolver_1.NODE_REGION_CONFIG_FILE_OPTIONS, ...loaderConfig }),
         requestHandler: node_http_handler_1.NodeHttpHandler.create(config?.requestHandler ?? defaultConfigProvider),
         retryMode: config?.retryMode ??
             (0, node_config_provider_1.loadConfig)({
@@ -9946,7 +9472,15 @@ const resolveAwsSdkSigV4Config = (config) => {
             });
             const boundProvider = bindCallerConfig(config, memoizedProvider);
             if (isUserSupplied && !boundProvider.attributed) {
-                resolvedCredentials = async (options) => boundProvider(options).then((creds) => client.setCredentialFeature(creds, "CREDENTIALS_CODE", "e"));
+                const isCredentialObject = typeof inputCredentials === "object" && inputCredentials !== null;
+                resolvedCredentials = async (options) => {
+                    const creds = await boundProvider(options);
+                    const attributedCreds = creds;
+                    if (isCredentialObject && (!attributedCreds.$source || Object.keys(attributedCreds.$source).length === 0)) {
+                        return client.setCredentialFeature(attributedCreds, "CREDENTIALS_CODE", "e");
+                    }
+                    return attributedCreds;
+                };
                 resolvedCredentials.memoized = boundProvider.memoized;
                 resolvedCredentials.configBound = boundProvider.configBound;
                 resolvedCredentials.attributed = true;
@@ -10284,46 +9818,6 @@ class SerdeContextConfig {
     }
 }
 
-function* serializingStructIterator(ns, sourceObject) {
-    if (ns.isUnitSchema()) {
-        return;
-    }
-    const struct = ns.getSchema();
-    for (let i = 0; i < struct[4].length; ++i) {
-        const key = struct[4][i];
-        const memberSchema = struct[5][i];
-        const memberNs = new schema.NormalizedSchema([memberSchema, 0], key);
-        if (!(key in sourceObject) && !memberNs.isIdempotencyToken()) {
-            continue;
-        }
-        yield [key, memberNs];
-    }
-}
-function* deserializingStructIterator(ns, sourceObject, nameTrait) {
-    if (ns.isUnitSchema()) {
-        return;
-    }
-    const struct = ns.getSchema();
-    let keysRemaining = Object.keys(sourceObject).filter((k) => k !== "__type").length;
-    for (let i = 0; i < struct[4].length; ++i) {
-        if (keysRemaining === 0) {
-            break;
-        }
-        const key = struct[4][i];
-        const memberSchema = struct[5][i];
-        const memberNs = new schema.NormalizedSchema([memberSchema, 0], key);
-        let serializationKey = key;
-        if (nameTrait) {
-            serializationKey = memberNs.getMergedTraits()[nameTrait] ?? key;
-        }
-        if (!(serializationKey in sourceObject)) {
-            continue;
-        }
-        yield [key, memberNs];
-        keysRemaining -= 1;
-    }
-}
-
 class UnionSerde {
     from;
     to;
@@ -10439,23 +9933,41 @@ class JsonShapeDeserializer extends SerdeContextConfig {
         const ns = schema.NormalizedSchema.of(schema$1);
         if (isObject) {
             if (ns.isStructSchema()) {
+                const record = value;
                 const union = ns.isUnionSchema();
                 const out = {};
+                let nameMap = void 0;
+                const { jsonName } = this.settings;
+                if (jsonName) {
+                    nameMap = {};
+                }
                 let unionSerde;
                 if (union) {
-                    unionSerde = new UnionSerde(value, out);
+                    unionSerde = new UnionSerde(record, out);
                 }
-                for (const [memberName, memberSchema] of deserializingStructIterator(ns, value, this.settings.jsonName ? "jsonName" : false)) {
-                    const fromKey = this.settings.jsonName ? memberSchema.getMergedTraits().jsonName ?? memberName : memberName;
+                for (const [memberName, memberSchema] of ns.structIterator()) {
+                    let fromKey = memberName;
+                    if (jsonName) {
+                        fromKey = memberSchema.getMergedTraits().jsonName ?? fromKey;
+                        nameMap[fromKey] = memberName;
+                    }
                     if (union) {
                         unionSerde.mark(fromKey);
                     }
-                    if (value[fromKey] != null) {
-                        out[memberName] = this._read(memberSchema, value[fromKey]);
+                    if (record[fromKey] != null) {
+                        out[memberName] = this._read(memberSchema, record[fromKey]);
                     }
                 }
                 if (union) {
                     unionSerde.writeUnknown();
+                }
+                else if (typeof record.__type === "string") {
+                    for (const [k, v] of Object.entries(record)) {
+                        const t = jsonName ? nameMap[k] ?? k : k;
+                        if (!(t in out)) {
+                            out[t] = v;
+                        }
+                    }
                 }
                 return out;
             }
@@ -10635,20 +10147,37 @@ class JsonShapeSerializer extends SerdeContextConfig {
         const ns = schema.NormalizedSchema.of(schema$1);
         if (isObject) {
             if (ns.isStructSchema()) {
+                const record = value;
                 const out = {};
-                for (const [memberName, memberSchema] of serializingStructIterator(ns, value)) {
-                    const serializableValue = this._write(memberSchema, value[memberName], ns);
+                const { jsonName } = this.settings;
+                let nameMap = void 0;
+                if (jsonName) {
+                    nameMap = {};
+                }
+                for (const [memberName, memberSchema] of ns.structIterator()) {
+                    const serializableValue = this._write(memberSchema, record[memberName], ns);
                     if (serializableValue !== undefined) {
-                        const jsonName = memberSchema.getMergedTraits().jsonName;
-                        const targetKey = this.settings.jsonName ? jsonName ?? memberName : memberName;
+                        let targetKey = memberName;
+                        if (jsonName) {
+                            targetKey = memberSchema.getMergedTraits().jsonName ?? memberName;
+                            nameMap[memberName] = targetKey;
+                        }
                         out[targetKey] = serializableValue;
                     }
                 }
                 if (ns.isUnionSchema() && Object.keys(out).length === 0) {
-                    const { $unknown } = value;
+                    const { $unknown } = record;
                     if (Array.isArray($unknown)) {
                         const [k, v] = $unknown;
                         out[k] = this._write(15, v);
+                    }
+                }
+                else if (typeof record.__type === "string") {
+                    for (const [k, v] of Object.entries(record)) {
+                        const targetKey = jsonName ? nameMap[k] ?? k : k;
+                        if (!(targetKey in out)) {
+                            out[targetKey] = this._write(15, v);
+                        }
                     }
                 }
                 return out;
@@ -11244,7 +10773,7 @@ class QueryShapeSerializer extends SerdeContextConfig {
         else if (ns.isStructSchema()) {
             if (value && typeof value === "object") {
                 let didWriteMember = false;
-                for (const [memberName, member] of serializingStructIterator(ns, value)) {
+                for (const [memberName, member] of ns.structIterator()) {
                     if (value[memberName] == null && !member.isIdempotencyToken()) {
                         continue;
                     }
@@ -11545,7 +11074,7 @@ class XmlShapeSerializer extends SerdeContextConfig {
         }
         const structXmlNode = xmlBuilder.XmlNode.of(name);
         const [xmlnsAttr, xmlns] = this.getXmlnsAttribute(ns, parentXmlns);
-        for (const [memberName, memberSchema] of serializingStructIterator(ns, value)) {
+        for (const [memberName, memberSchema] of ns.structIterator()) {
             const val = value[memberName];
             if (val != null || memberSchema.isIdempotencyToken()) {
                 if (memberSchema.getMergedTraits().xmlAttribute) {
@@ -11842,6 +11371,17 @@ class AwsRestXmlProtocol extends protocols.HttpBindingProtocol {
     }
     async handleError(operationSchema, context, response, dataObject, metadata) {
         const errorIdentifier = loadRestXmlErrorCode(response, dataObject) ?? "Unknown";
+        if (dataObject.Error && typeof dataObject.Error === "object") {
+            for (const key of Object.keys(dataObject.Error)) {
+                dataObject[key] = dataObject.Error[key];
+                if (key.toLowerCase() === "message") {
+                    dataObject.message = dataObject.Error[key];
+                }
+            }
+        }
+        if (dataObject.RequestId && !metadata.requestId) {
+            metadata.requestId = dataObject.RequestId;
+        }
         const { errorSchema, errorMetadata } = await this.mixin.getErrorSchemaOrThrowBaseException(errorIdentifier, this.options.defaultNamespace, response, dataObject, metadata);
         const ns = schema.NormalizedSchema.of(errorSchema);
         const message = dataObject.Error?.message ?? dataObject.Error?.Message ?? dataObject.message ?? dataObject.Message ?? "Unknown";
@@ -12214,46 +11754,6 @@ class SerdeContextConfig {
     }
 }
 
-function* serializingStructIterator(ns, sourceObject) {
-    if (ns.isUnitSchema()) {
-        return;
-    }
-    const struct = ns.getSchema();
-    for (let i = 0; i < struct[4].length; ++i) {
-        const key = struct[4][i];
-        const memberSchema = struct[5][i];
-        const memberNs = new schema.NormalizedSchema([memberSchema, 0], key);
-        if (!(key in sourceObject) && !memberNs.isIdempotencyToken()) {
-            continue;
-        }
-        yield [key, memberNs];
-    }
-}
-function* deserializingStructIterator(ns, sourceObject, nameTrait) {
-    if (ns.isUnitSchema()) {
-        return;
-    }
-    const struct = ns.getSchema();
-    let keysRemaining = Object.keys(sourceObject).filter((k) => k !== "__type").length;
-    for (let i = 0; i < struct[4].length; ++i) {
-        if (keysRemaining === 0) {
-            break;
-        }
-        const key = struct[4][i];
-        const memberSchema = struct[5][i];
-        const memberNs = new schema.NormalizedSchema([memberSchema, 0], key);
-        let serializationKey = key;
-        if (nameTrait) {
-            serializationKey = memberNs.getMergedTraits()[nameTrait] ?? key;
-        }
-        if (!(serializationKey in sourceObject)) {
-            continue;
-        }
-        yield [key, memberNs];
-        keysRemaining -= 1;
-    }
-}
-
 class UnionSerde {
     from;
     to;
@@ -12369,23 +11869,41 @@ class JsonShapeDeserializer extends SerdeContextConfig {
         const ns = schema.NormalizedSchema.of(schema$1);
         if (isObject) {
             if (ns.isStructSchema()) {
+                const record = value;
                 const union = ns.isUnionSchema();
                 const out = {};
+                let nameMap = void 0;
+                const { jsonName } = this.settings;
+                if (jsonName) {
+                    nameMap = {};
+                }
                 let unionSerde;
                 if (union) {
-                    unionSerde = new UnionSerde(value, out);
+                    unionSerde = new UnionSerde(record, out);
                 }
-                for (const [memberName, memberSchema] of deserializingStructIterator(ns, value, this.settings.jsonName ? "jsonName" : false)) {
-                    const fromKey = this.settings.jsonName ? memberSchema.getMergedTraits().jsonName ?? memberName : memberName;
+                for (const [memberName, memberSchema] of ns.structIterator()) {
+                    let fromKey = memberName;
+                    if (jsonName) {
+                        fromKey = memberSchema.getMergedTraits().jsonName ?? fromKey;
+                        nameMap[fromKey] = memberName;
+                    }
                     if (union) {
                         unionSerde.mark(fromKey);
                     }
-                    if (value[fromKey] != null) {
-                        out[memberName] = this._read(memberSchema, value[fromKey]);
+                    if (record[fromKey] != null) {
+                        out[memberName] = this._read(memberSchema, record[fromKey]);
                     }
                 }
                 if (union) {
                     unionSerde.writeUnknown();
+                }
+                else if (typeof record.__type === "string") {
+                    for (const [k, v] of Object.entries(record)) {
+                        const t = jsonName ? nameMap[k] ?? k : k;
+                        if (!(t in out)) {
+                            out[t] = v;
+                        }
+                    }
                 }
                 return out;
             }
@@ -12565,20 +12083,37 @@ class JsonShapeSerializer extends SerdeContextConfig {
         const ns = schema.NormalizedSchema.of(schema$1);
         if (isObject) {
             if (ns.isStructSchema()) {
+                const record = value;
                 const out = {};
-                for (const [memberName, memberSchema] of serializingStructIterator(ns, value)) {
-                    const serializableValue = this._write(memberSchema, value[memberName], ns);
+                const { jsonName } = this.settings;
+                let nameMap = void 0;
+                if (jsonName) {
+                    nameMap = {};
+                }
+                for (const [memberName, memberSchema] of ns.structIterator()) {
+                    const serializableValue = this._write(memberSchema, record[memberName], ns);
                     if (serializableValue !== undefined) {
-                        const jsonName = memberSchema.getMergedTraits().jsonName;
-                        const targetKey = this.settings.jsonName ? jsonName ?? memberName : memberName;
+                        let targetKey = memberName;
+                        if (jsonName) {
+                            targetKey = memberSchema.getMergedTraits().jsonName ?? memberName;
+                            nameMap[memberName] = targetKey;
+                        }
                         out[targetKey] = serializableValue;
                     }
                 }
                 if (ns.isUnionSchema() && Object.keys(out).length === 0) {
-                    const { $unknown } = value;
+                    const { $unknown } = record;
                     if (Array.isArray($unknown)) {
                         const [k, v] = $unknown;
                         out[k] = this._write(15, v);
+                    }
+                }
+                else if (typeof record.__type === "string") {
+                    for (const [k, v] of Object.entries(record)) {
+                        const targetKey = jsonName ? nameMap[k] ?? k : k;
+                        if (!(targetKey in out)) {
+                            out[targetKey] = this._write(15, v);
+                        }
                     }
                 }
                 return out;
@@ -13174,7 +12709,7 @@ class QueryShapeSerializer extends SerdeContextConfig {
         else if (ns.isStructSchema()) {
             if (value && typeof value === "object") {
                 let didWriteMember = false;
-                for (const [memberName, member] of serializingStructIterator(ns, value)) {
+                for (const [memberName, member] of ns.structIterator()) {
                     if (value[memberName] == null && !member.isIdempotencyToken()) {
                         continue;
                     }
@@ -13475,7 +13010,7 @@ class XmlShapeSerializer extends SerdeContextConfig {
         }
         const structXmlNode = xmlBuilder.XmlNode.of(name);
         const [xmlnsAttr, xmlns] = this.getXmlnsAttribute(ns, parentXmlns);
-        for (const [memberName, memberSchema] of serializingStructIterator(ns, value)) {
+        for (const [memberName, memberSchema] of ns.structIterator()) {
             const val = value[memberName];
             if (val != null || memberSchema.isIdempotencyToken()) {
                 if (memberSchema.getMergedTraits().xmlAttribute) {
@@ -13772,6 +13307,17 @@ class AwsRestXmlProtocol extends protocols.HttpBindingProtocol {
     }
     async handleError(operationSchema, context, response, dataObject, metadata) {
         const errorIdentifier = loadRestXmlErrorCode(response, dataObject) ?? "Unknown";
+        if (dataObject.Error && typeof dataObject.Error === "object") {
+            for (const key of Object.keys(dataObject.Error)) {
+                dataObject[key] = dataObject.Error[key];
+                if (key.toLowerCase() === "message") {
+                    dataObject.message = dataObject.Error[key];
+                }
+            }
+        }
+        if (dataObject.RequestId && !metadata.requestId) {
+            metadata.requestId = dataObject.RequestId;
+        }
         const { errorSchema, errorMetadata } = await this.mixin.getErrorSchemaOrThrowBaseException(errorIdentifier, this.options.defaultNamespace, response, dataObject, metadata);
         const ns = schema.NormalizedSchema.of(errorSchema);
         const message = dataObject.Error?.message ?? dataObject.Error?.Message ?? dataObject.message ?? dataObject.Message ?? "Unknown";
@@ -13926,15 +13472,21 @@ function memoizeChain(providers, treatAsExpired) {
         else if (!credentials || treatAsExpired?.(credentials)) {
             if (credentials) {
                 if (!passiveLock) {
-                    passiveLock = chain(options).then((c) => {
+                    passiveLock = chain(options)
+                        .then((c) => {
                         credentials = c;
+                    })
+                        .finally(() => {
                         passiveLock = undefined;
                     });
                 }
             }
             else {
-                activeLock = chain(options).then((c) => {
+                activeLock = chain(options)
+                    .then((c) => {
                     credentials = c;
+                })
+                    .finally(() => {
                     activeLock = undefined;
                 });
                 return provider(options);
@@ -14013,7 +13565,7 @@ const defaultProvider = (init = {}) => memoizeChain([
     },
     async (awsIdentityProperties) => {
         init.logger?.debug("@aws-sdk/credential-provider-node - defaultProvider::fromTokenFile");
-        const { fromTokenFile } = await __nccwpck_require__.e(/* import() */ 956).then(__nccwpck_require__.t.bind(__nccwpck_require__, 9956, 23));
+        const { fromTokenFile } = await Promise.all(/* import() */[__nccwpck_require__.e(136), __nccwpck_require__.e(956)]).then(__nccwpck_require__.t.bind(__nccwpck_require__, 9956, 23));
         return fromTokenFile(init)(awsIdentityProperties);
     },
     async () => {
@@ -14223,7 +13775,7 @@ exports.recursionDetectionMiddleware = recursionDetectionMiddleware;
 
 
 var core = __nccwpck_require__(402);
-var utilEndpoints = __nccwpck_require__(3068);
+var utilEndpoints = __nccwpck_require__(2547);
 var protocolHttp = __nccwpck_require__(2356);
 var core$1 = __nccwpck_require__(8704);
 
@@ -14414,6 +13966,429 @@ exports.getUserAgentMiddlewareOptions = getUserAgentMiddlewareOptions;
 exports.getUserAgentPlugin = getUserAgentPlugin;
 exports.resolveUserAgentConfig = resolveUserAgentConfig;
 exports.userAgentMiddleware = userAgentMiddleware;
+
+
+/***/ }),
+
+/***/ 2547:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+var utilEndpoints = __nccwpck_require__(9674);
+var urlParser = __nccwpck_require__(4494);
+
+const isVirtualHostableS3Bucket = (value, allowSubDomains = false) => {
+    if (allowSubDomains) {
+        for (const label of value.split(".")) {
+            if (!isVirtualHostableS3Bucket(label)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    if (!utilEndpoints.isValidHostLabel(value)) {
+        return false;
+    }
+    if (value.length < 3 || value.length > 63) {
+        return false;
+    }
+    if (value !== value.toLowerCase()) {
+        return false;
+    }
+    if (utilEndpoints.isIpAddress(value)) {
+        return false;
+    }
+    return true;
+};
+
+const ARN_DELIMITER = ":";
+const RESOURCE_DELIMITER = "/";
+const parseArn = (value) => {
+    const segments = value.split(ARN_DELIMITER);
+    if (segments.length < 6)
+        return null;
+    const [arn, partition, service, region, accountId, ...resourcePath] = segments;
+    if (arn !== "arn" || partition === "" || service === "" || resourcePath.join(ARN_DELIMITER) === "")
+        return null;
+    const resourceId = resourcePath.map((resource) => resource.split(RESOURCE_DELIMITER)).flat();
+    return {
+        partition,
+        service,
+        region,
+        accountId,
+        resourceId,
+    };
+};
+
+var partitions = [
+	{
+		id: "aws",
+		outputs: {
+			dnsSuffix: "amazonaws.com",
+			dualStackDnsSuffix: "api.aws",
+			implicitGlobalRegion: "us-east-1",
+			name: "aws",
+			supportsDualStack: true,
+			supportsFIPS: true
+		},
+		regionRegex: "^(us|eu|ap|sa|ca|me|af|il|mx)\\-\\w+\\-\\d+$",
+		regions: {
+			"af-south-1": {
+				description: "Africa (Cape Town)"
+			},
+			"ap-east-1": {
+				description: "Asia Pacific (Hong Kong)"
+			},
+			"ap-east-2": {
+				description: "Asia Pacific (Taipei)"
+			},
+			"ap-northeast-1": {
+				description: "Asia Pacific (Tokyo)"
+			},
+			"ap-northeast-2": {
+				description: "Asia Pacific (Seoul)"
+			},
+			"ap-northeast-3": {
+				description: "Asia Pacific (Osaka)"
+			},
+			"ap-south-1": {
+				description: "Asia Pacific (Mumbai)"
+			},
+			"ap-south-2": {
+				description: "Asia Pacific (Hyderabad)"
+			},
+			"ap-southeast-1": {
+				description: "Asia Pacific (Singapore)"
+			},
+			"ap-southeast-2": {
+				description: "Asia Pacific (Sydney)"
+			},
+			"ap-southeast-3": {
+				description: "Asia Pacific (Jakarta)"
+			},
+			"ap-southeast-4": {
+				description: "Asia Pacific (Melbourne)"
+			},
+			"ap-southeast-5": {
+				description: "Asia Pacific (Malaysia)"
+			},
+			"ap-southeast-6": {
+				description: "Asia Pacific (New Zealand)"
+			},
+			"ap-southeast-7": {
+				description: "Asia Pacific (Thailand)"
+			},
+			"aws-global": {
+				description: "aws global region"
+			},
+			"ca-central-1": {
+				description: "Canada (Central)"
+			},
+			"ca-west-1": {
+				description: "Canada West (Calgary)"
+			},
+			"eu-central-1": {
+				description: "Europe (Frankfurt)"
+			},
+			"eu-central-2": {
+				description: "Europe (Zurich)"
+			},
+			"eu-north-1": {
+				description: "Europe (Stockholm)"
+			},
+			"eu-south-1": {
+				description: "Europe (Milan)"
+			},
+			"eu-south-2": {
+				description: "Europe (Spain)"
+			},
+			"eu-west-1": {
+				description: "Europe (Ireland)"
+			},
+			"eu-west-2": {
+				description: "Europe (London)"
+			},
+			"eu-west-3": {
+				description: "Europe (Paris)"
+			},
+			"il-central-1": {
+				description: "Israel (Tel Aviv)"
+			},
+			"me-central-1": {
+				description: "Middle East (UAE)"
+			},
+			"me-south-1": {
+				description: "Middle East (Bahrain)"
+			},
+			"mx-central-1": {
+				description: "Mexico (Central)"
+			},
+			"sa-east-1": {
+				description: "South America (Sao Paulo)"
+			},
+			"us-east-1": {
+				description: "US East (N. Virginia)"
+			},
+			"us-east-2": {
+				description: "US East (Ohio)"
+			},
+			"us-west-1": {
+				description: "US West (N. California)"
+			},
+			"us-west-2": {
+				description: "US West (Oregon)"
+			}
+		}
+	},
+	{
+		id: "aws-cn",
+		outputs: {
+			dnsSuffix: "amazonaws.com.cn",
+			dualStackDnsSuffix: "api.amazonwebservices.com.cn",
+			implicitGlobalRegion: "cn-northwest-1",
+			name: "aws-cn",
+			supportsDualStack: true,
+			supportsFIPS: true
+		},
+		regionRegex: "^cn\\-\\w+\\-\\d+$",
+		regions: {
+			"aws-cn-global": {
+				description: "aws-cn global region"
+			},
+			"cn-north-1": {
+				description: "China (Beijing)"
+			},
+			"cn-northwest-1": {
+				description: "China (Ningxia)"
+			}
+		}
+	},
+	{
+		id: "aws-eusc",
+		outputs: {
+			dnsSuffix: "amazonaws.eu",
+			dualStackDnsSuffix: "api.amazonwebservices.eu",
+			implicitGlobalRegion: "eusc-de-east-1",
+			name: "aws-eusc",
+			supportsDualStack: true,
+			supportsFIPS: true
+		},
+		regionRegex: "^eusc\\-(de)\\-\\w+\\-\\d+$",
+		regions: {
+			"eusc-de-east-1": {
+				description: "AWS European Sovereign Cloud (Germany)"
+			}
+		}
+	},
+	{
+		id: "aws-iso",
+		outputs: {
+			dnsSuffix: "c2s.ic.gov",
+			dualStackDnsSuffix: "api.aws.ic.gov",
+			implicitGlobalRegion: "us-iso-east-1",
+			name: "aws-iso",
+			supportsDualStack: true,
+			supportsFIPS: true
+		},
+		regionRegex: "^us\\-iso\\-\\w+\\-\\d+$",
+		regions: {
+			"aws-iso-global": {
+				description: "aws-iso global region"
+			},
+			"us-iso-east-1": {
+				description: "US ISO East"
+			},
+			"us-iso-west-1": {
+				description: "US ISO WEST"
+			}
+		}
+	},
+	{
+		id: "aws-iso-b",
+		outputs: {
+			dnsSuffix: "sc2s.sgov.gov",
+			dualStackDnsSuffix: "api.aws.scloud",
+			implicitGlobalRegion: "us-isob-east-1",
+			name: "aws-iso-b",
+			supportsDualStack: true,
+			supportsFIPS: true
+		},
+		regionRegex: "^us\\-isob\\-\\w+\\-\\d+$",
+		regions: {
+			"aws-iso-b-global": {
+				description: "aws-iso-b global region"
+			},
+			"us-isob-east-1": {
+				description: "US ISOB East (Ohio)"
+			},
+			"us-isob-west-1": {
+				description: "US ISOB West"
+			}
+		}
+	},
+	{
+		id: "aws-iso-e",
+		outputs: {
+			dnsSuffix: "cloud.adc-e.uk",
+			dualStackDnsSuffix: "api.cloud-aws.adc-e.uk",
+			implicitGlobalRegion: "eu-isoe-west-1",
+			name: "aws-iso-e",
+			supportsDualStack: true,
+			supportsFIPS: true
+		},
+		regionRegex: "^eu\\-isoe\\-\\w+\\-\\d+$",
+		regions: {
+			"aws-iso-e-global": {
+				description: "aws-iso-e global region"
+			},
+			"eu-isoe-west-1": {
+				description: "EU ISOE West"
+			}
+		}
+	},
+	{
+		id: "aws-iso-f",
+		outputs: {
+			dnsSuffix: "csp.hci.ic.gov",
+			dualStackDnsSuffix: "api.aws.hci.ic.gov",
+			implicitGlobalRegion: "us-isof-south-1",
+			name: "aws-iso-f",
+			supportsDualStack: true,
+			supportsFIPS: true
+		},
+		regionRegex: "^us\\-isof\\-\\w+\\-\\d+$",
+		regions: {
+			"aws-iso-f-global": {
+				description: "aws-iso-f global region"
+			},
+			"us-isof-east-1": {
+				description: "US ISOF EAST"
+			},
+			"us-isof-south-1": {
+				description: "US ISOF SOUTH"
+			}
+		}
+	},
+	{
+		id: "aws-us-gov",
+		outputs: {
+			dnsSuffix: "amazonaws.com",
+			dualStackDnsSuffix: "api.aws",
+			implicitGlobalRegion: "us-gov-west-1",
+			name: "aws-us-gov",
+			supportsDualStack: true,
+			supportsFIPS: true
+		},
+		regionRegex: "^us\\-gov\\-\\w+\\-\\d+$",
+		regions: {
+			"aws-us-gov-global": {
+				description: "aws-us-gov global region"
+			},
+			"us-gov-east-1": {
+				description: "AWS GovCloud (US-East)"
+			},
+			"us-gov-west-1": {
+				description: "AWS GovCloud (US-West)"
+			}
+		}
+	}
+];
+var version = "1.1";
+var partitionsInfo = {
+	partitions: partitions,
+	version: version
+};
+
+let selectedPartitionsInfo = partitionsInfo;
+let selectedUserAgentPrefix = "";
+const partition = (value) => {
+    const { partitions } = selectedPartitionsInfo;
+    for (const partition of partitions) {
+        const { regions, outputs } = partition;
+        for (const [region, regionData] of Object.entries(regions)) {
+            if (region === value) {
+                return {
+                    ...outputs,
+                    ...regionData,
+                };
+            }
+        }
+    }
+    for (const partition of partitions) {
+        const { regionRegex, outputs } = partition;
+        if (new RegExp(regionRegex).test(value)) {
+            return {
+                ...outputs,
+            };
+        }
+    }
+    const DEFAULT_PARTITION = partitions.find((partition) => partition.id === "aws");
+    if (!DEFAULT_PARTITION) {
+        throw new Error("Provided region was not found in the partition array or regex," +
+            " and default partition with id 'aws' doesn't exist.");
+    }
+    return {
+        ...DEFAULT_PARTITION.outputs,
+    };
+};
+const setPartitionInfo = (partitionsInfo, userAgentPrefix = "") => {
+    selectedPartitionsInfo = partitionsInfo;
+    selectedUserAgentPrefix = userAgentPrefix;
+};
+const useDefaultPartitionInfo = () => {
+    setPartitionInfo(partitionsInfo, "");
+};
+const getUserAgentPrefix = () => selectedUserAgentPrefix;
+
+const awsEndpointFunctions = {
+    isVirtualHostableS3Bucket: isVirtualHostableS3Bucket,
+    parseArn: parseArn,
+    partition: partition,
+};
+utilEndpoints.customEndpointFunctions.aws = awsEndpointFunctions;
+
+const resolveDefaultAwsRegionalEndpointsConfig = (input) => {
+    if (typeof input.endpointProvider !== "function") {
+        throw new Error("@aws-sdk/util-endpoint - endpointProvider and endpoint missing in config for this client.");
+    }
+    const { endpoint } = input;
+    if (endpoint === undefined) {
+        input.endpoint = async () => {
+            return toEndpointV1(input.endpointProvider({
+                Region: typeof input.region === "function" ? await input.region() : input.region,
+                UseDualStack: typeof input.useDualstackEndpoint === "function"
+                    ? await input.useDualstackEndpoint()
+                    : input.useDualstackEndpoint,
+                UseFIPS: typeof input.useFipsEndpoint === "function" ? await input.useFipsEndpoint() : input.useFipsEndpoint,
+                Endpoint: undefined,
+            }, { logger: input.logger }));
+        };
+    }
+    return input;
+};
+const toEndpointV1 = (endpoint) => urlParser.parseUrl(endpoint.url);
+
+Object.defineProperty(exports, "EndpointError", ({
+    enumerable: true,
+    get: function () { return utilEndpoints.EndpointError; }
+}));
+Object.defineProperty(exports, "isIpAddress", ({
+    enumerable: true,
+    get: function () { return utilEndpoints.isIpAddress; }
+}));
+Object.defineProperty(exports, "resolveEndpoint", ({
+    enumerable: true,
+    get: function () { return utilEndpoints.resolveEndpoint; }
+}));
+exports.awsEndpointFunctions = awsEndpointFunctions;
+exports.getUserAgentPrefix = getUserAgentPrefix;
+exports.partition = partition;
+exports.resolveDefaultAwsRegionalEndpointsConfig = resolveDefaultAwsRegionalEndpointsConfig;
+exports.setPartitionInfo = setPartitionInfo;
+exports.toEndpointV1 = toEndpointV1;
+exports.useDefaultPartitionInfo = useDefaultPartitionInfo;
 
 
 /***/ }),
@@ -14711,7 +14686,7 @@ var partitions = [
 		regionRegex: "^eusc\\-(de)\\-\\w+\\-\\d+$",
 		regions: {
 			"eusc-de-east-1": {
-				description: "EU (Germany)"
+				description: "AWS European Sovereign Cloud (Germany)"
 			}
 		}
 	},
@@ -14995,26 +14970,34 @@ exports.defaultUserAgent = defaultUserAgent;
 /***/ 4274:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
-"use strict";
+const { parseXML } = __nccwpck_require__(3343);
+exports.parseXML = parseXML;
 
-
-var xmlParser = __nccwpck_require__(3343);
-
+const ATTR_ESCAPE_RE = /[&<>"]/g;
+const ATTR_ESCAPE_MAP = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+};
 function escapeAttribute(value) {
-    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    return value.replace(ATTR_ESCAPE_RE, (ch) => ATTR_ESCAPE_MAP[ch]);
 }
 
+const ELEMENT_ESCAPE_RE = /[&"'<>\r\n\u0085\u2028]/g;
+const ELEMENT_ESCAPE_MAP = {
+    "&": "&amp;",
+    '"': "&quot;",
+    "'": "&apos;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\r": "&#x0D;",
+    "\n": "&#x0A;",
+    "\u0085": "&#x85;",
+    "\u2028": "&#x2028;",
+};
 function escapeElement(value) {
-    return value
-        .replace(/&/g, "&amp;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&apos;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/\r/g, "&#x0D;")
-        .replace(/\n/g, "&#x0A;")
-        .replace(/\u0085/g, "&#x85;")
-        .replace(/\u2028/, "&#x2028;");
+    return value.replace(ELEMENT_ESCAPE_RE, (ch) => ELEMENT_ESCAPE_MAP[ch]);
 }
 
 class XmlText {
@@ -15114,12 +15097,348 @@ class XmlNode {
     }
 }
 
-Object.defineProperty(exports, "parseXML", ({
-    enumerable: true,
-    get: function () { return xmlParser.parseXML; }
-}));
 exports.XmlNode = XmlNode;
 exports.XmlText = XmlText;
+
+
+/***/ }),
+
+/***/ 7051:
+/***/ ((__unused_webpack_module, exports) => {
+
+const XML = {
+    amp: "&",
+    apos: "'",
+    gt: ">",
+    lt: "<",
+    quot: '"',
+};
+exports.XML = XML;
+exports.COMMON_HTML = {
+    nbsp: "\u00a0",
+    copy: "\u00a9",
+    reg: "\u00ae",
+    trade: "\u2122",
+    mdash: "\u2014",
+    ndash: "\u2013",
+    hellip: "\u2026",
+    laquo: "\u00ab",
+    raquo: "\u00bb",
+    lsquo: "\u2018",
+    rsquo: "\u2019",
+    ldquo: "\u201c",
+    rdquo: "\u201d",
+    bull: "\u2022",
+    para: "\u00b6",
+    sect: "\u00a7",
+    deg: "\u00b0",
+    frac12: "\u00bd",
+    frac14: "\u00bc",
+    frac34: "\u00be",
+};
+exports.CURRENCY = {
+    cent: "\u00a2",
+    pound: "\u00a3",
+    curren: "\u00a4",
+    yen: "\u00a5",
+    euro: "\u20ac",
+    dollar: "$",
+    fnof: "\u0192",
+    inr: "\u20b9",
+    af: "\u060b",
+    birr: "\u1265\u122d",
+    peso: "\u20b1",
+    rub: "\u20bd",
+    won: "\u20a9",
+    yuan: "\u00a5",
+    cedil: "\u00b8",
+};
+const SPECIAL_CHARS = new Set("!?\\/[]$%{}^&*()<>|+");
+function validateEntityName(name) {
+    if (name[0] === "#") {
+        throw new Error(`[EntityReplacer] Invalid character '#' in entity name: "${name}"`);
+    }
+    for (const ch of name) {
+        if (SPECIAL_CHARS.has(ch)) {
+            throw new Error(`[EntityReplacer] Invalid character '${ch}' in entity name: "${name}"`);
+        }
+    }
+    return name;
+}
+function mergeEntityMaps(...maps) {
+    const out = Object.create(null);
+    for (const map of maps) {
+        if (!map) {
+            continue;
+        }
+        for (const key of Object.keys(map)) {
+            const raw = map[key];
+            if (typeof raw === "string") {
+                out[key] = raw;
+            }
+            else if (raw && typeof raw === "object" && raw.val !== undefined) {
+                const val = raw.val;
+                if (typeof val === "string") {
+                    out[key] = val;
+                }
+            }
+        }
+    }
+    return out;
+}
+const LIMIT_TIER_EXTERNAL = "external";
+const LIMIT_TIER_BASE = "base";
+const LIMIT_TIER_ALL = "all";
+function parseLimitTiers(raw) {
+    if (!raw || raw === LIMIT_TIER_EXTERNAL) {
+        return new Set([LIMIT_TIER_EXTERNAL]);
+    }
+    if (raw === LIMIT_TIER_ALL) {
+        return new Set([LIMIT_TIER_ALL]);
+    }
+    if (raw === LIMIT_TIER_BASE) {
+        return new Set([LIMIT_TIER_BASE]);
+    }
+    if (Array.isArray(raw)) {
+        return new Set(raw);
+    }
+    return new Set([LIMIT_TIER_EXTERNAL]);
+}
+const NCR_LEVEL = Object.freeze({ allow: 0, leave: 1, remove: 2, throw: 3 });
+const XML10_ALLOWED_C0 = new Set([0x09, 0x0a, 0x0d]);
+function parseNCRConfig(ncr) {
+    if (!ncr) {
+        return { xmlVersion: 1.0, onLevel: NCR_LEVEL.allow, nullLevel: NCR_LEVEL.remove };
+    }
+    const xmlVersion = ncr.xmlVersion === 1.1 ? 1.1 : 1.0;
+    const onLevel = NCR_LEVEL[ncr.onNCR ?? "allow"] ?? NCR_LEVEL.allow;
+    const nullLevel = NCR_LEVEL[ncr.nullNCR ?? "remove"] ?? NCR_LEVEL.remove;
+    const clampedNull = Math.max(nullLevel, NCR_LEVEL.remove);
+    return { xmlVersion, onLevel, nullLevel: clampedNull };
+}
+exports.EntityDecoderImpl = class EntityDecoderImpl {
+    _limit;
+    _maxTotalExpansions;
+    _maxExpandedLength;
+    _postCheck;
+    _limitTiers;
+    _numericAllowed;
+    _baseMap;
+    _externalMap;
+    _inputMap;
+    _totalExpansions;
+    _expandedLength;
+    _removeSet;
+    _leaveSet;
+    _ncrXmlVersion;
+    _ncrOnLevel;
+    _ncrNullLevel;
+    constructor(options = {}) {
+        this._limit = options.limit || {};
+        this._maxTotalExpansions = this._limit.maxTotalExpansions || 0;
+        this._maxExpandedLength = this._limit.maxExpandedLength || 0;
+        this._postCheck = typeof options.postCheck === "function" ? options.postCheck : (r) => r;
+        this._limitTiers = parseLimitTiers(this._limit.applyLimitsTo ?? LIMIT_TIER_EXTERNAL);
+        this._numericAllowed = options.numericAllowed ?? true;
+        this._baseMap = mergeEntityMaps(XML, options.namedEntities || null);
+        this._externalMap = Object.create(null);
+        this._inputMap = Object.create(null);
+        this._totalExpansions = 0;
+        this._expandedLength = 0;
+        this._removeSet = new Set(options.remove && Array.isArray(options.remove) ? options.remove : []);
+        this._leaveSet = new Set(options.leave && Array.isArray(options.leave) ? options.leave : []);
+        const ncrCfg = parseNCRConfig(options.ncr);
+        this._ncrXmlVersion = ncrCfg.xmlVersion;
+        this._ncrOnLevel = ncrCfg.onLevel;
+        this._ncrNullLevel = ncrCfg.nullLevel;
+    }
+    setExternalEntities(map) {
+        if (map) {
+            for (const key of Object.keys(map)) {
+                validateEntityName(key);
+            }
+        }
+        this._externalMap = mergeEntityMaps(map);
+    }
+    addExternalEntity(key, value) {
+        validateEntityName(key);
+        if (typeof value === "string" && value.indexOf("&") === -1) {
+            this._externalMap[key] = value;
+        }
+    }
+    addInputEntities(map) {
+        this._totalExpansions = 0;
+        this._expandedLength = 0;
+        this._inputMap = mergeEntityMaps(map);
+    }
+    reset() {
+        this._inputMap = Object.create(null);
+        this._totalExpansions = 0;
+        this._expandedLength = 0;
+        return this;
+    }
+    setXmlVersion(version) {
+        this._ncrXmlVersion = version === "1.1" || version === 1.1 ? 1.1 : 1.0;
+    }
+    decode(str) {
+        if (typeof str !== "string" || str.length === 0) {
+            return str;
+        }
+        const original = str;
+        const chunks = [];
+        const len = str.length;
+        let last = 0;
+        let i = 0;
+        const limitExpansions = this._maxTotalExpansions > 0;
+        const limitLength = this._maxExpandedLength > 0;
+        const checkLimits = limitExpansions || limitLength;
+        while (i < len) {
+            if (str.charCodeAt(i) !== 38) {
+                i++;
+                continue;
+            }
+            let j = i + 1;
+            while (j < len && str.charCodeAt(j) !== 59 && j - i <= 32) {
+                j++;
+            }
+            if (j >= len || str.charCodeAt(j) !== 59) {
+                i++;
+                continue;
+            }
+            const token = str.slice(i + 1, j);
+            if (token.length === 0) {
+                i++;
+                continue;
+            }
+            let replacement;
+            let tier;
+            if (this._removeSet.has(token)) {
+                replacement = "";
+                if (tier === undefined) {
+                    tier = LIMIT_TIER_EXTERNAL;
+                }
+            }
+            else if (this._leaveSet.has(token)) {
+                i++;
+                continue;
+            }
+            else if (token.charCodeAt(0) === 35) {
+                const ncrResult = this._resolveNCR(token);
+                if (ncrResult === undefined) {
+                    i++;
+                    continue;
+                }
+                replacement = ncrResult;
+                tier = LIMIT_TIER_BASE;
+            }
+            else {
+                const resolved = this._resolveName(token);
+                replacement = resolved?.value;
+                tier = resolved?.tier;
+            }
+            if (replacement === undefined) {
+                i++;
+                continue;
+            }
+            if (i > last) {
+                chunks.push(str.slice(last, i));
+            }
+            chunks.push(replacement);
+            last = j + 1;
+            i = last;
+            if (checkLimits && this._tierCounts(tier)) {
+                if (limitExpansions) {
+                    this._totalExpansions++;
+                    if (this._totalExpansions > this._maxTotalExpansions) {
+                        throw new Error(`[EntityReplacer] Entity expansion count limit exceeded: ` +
+                            `${this._totalExpansions} > ${this._maxTotalExpansions}`);
+                    }
+                }
+                if (limitLength) {
+                    const delta = replacement.length - (token.length + 2);
+                    if (delta > 0) {
+                        this._expandedLength += delta;
+                        if (this._expandedLength > this._maxExpandedLength) {
+                            throw new Error(`[EntityReplacer] Expanded content length limit exceeded: ` +
+                                `${this._expandedLength} > ${this._maxExpandedLength}`);
+                        }
+                    }
+                }
+            }
+        }
+        if (last < len) {
+            chunks.push(str.slice(last));
+        }
+        const result = chunks.length === 0 ? str : chunks.join("");
+        return this._postCheck(result, original);
+    }
+    _tierCounts(tier) {
+        if (this._limitTiers.has(LIMIT_TIER_ALL)) {
+            return true;
+        }
+        return this._limitTiers.has(tier);
+    }
+    _resolveName(name) {
+        if (name in this._inputMap) {
+            return { value: this._inputMap[name], tier: LIMIT_TIER_EXTERNAL };
+        }
+        if (name in this._externalMap) {
+            return { value: this._externalMap[name], tier: LIMIT_TIER_EXTERNAL };
+        }
+        if (name in this._baseMap) {
+            return { value: this._baseMap[name], tier: LIMIT_TIER_BASE };
+        }
+        return undefined;
+    }
+    _classifyNCR(cp) {
+        if (cp === 0) {
+            return this._ncrNullLevel;
+        }
+        if (cp >= 0xd800 && cp <= 0xdfff) {
+            return NCR_LEVEL.remove;
+        }
+        if (this._ncrXmlVersion === 1.0) {
+            if (cp >= 0x01 && cp <= 0x1f && !XML10_ALLOWED_C0.has(cp)) {
+                return NCR_LEVEL.remove;
+            }
+        }
+        return -1;
+    }
+    _applyNCRAction(action, token, cp) {
+        switch (action) {
+            case NCR_LEVEL.allow:
+                return String.fromCodePoint(cp);
+            case NCR_LEVEL.remove:
+                return "";
+            case NCR_LEVEL.leave:
+                return undefined;
+            case NCR_LEVEL.throw:
+                throw new Error(`[EntityDecoder] Prohibited numeric character reference ` +
+                    `&${token}; (U+${cp.toString(16).toUpperCase().padStart(4, "0")})`);
+            default:
+                return String.fromCodePoint(cp);
+        }
+    }
+    _resolveNCR(token) {
+        const second = token.charCodeAt(1);
+        let cp;
+        if (second === 120 || second === 88) {
+            cp = parseInt(token.slice(2), 16);
+        }
+        else {
+            cp = parseInt(token.slice(1), 10);
+        }
+        if (Number.isNaN(cp) || cp < 0 || cp > 0x10ffff) {
+            return undefined;
+        }
+        const minimum = this._classifyNCR(cp);
+        if (!this._numericAllowed && minimum < NCR_LEVEL.remove) {
+            return undefined;
+        }
+        const effective = minimum === -1 ? this._ncrOnLevel : Math.max(this._ncrOnLevel, minimum);
+        return this._applyNCRAction(effective, token, cp);
+    }
+};
 
 
 /***/ }),
@@ -15127,25 +15446,50 @@ exports.XmlText = XmlText;
 /***/ 3343:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.parseXML = parseXML;
-const fast_xml_parser_1 = __nccwpck_require__(591);
-const parser = new fast_xml_parser_1.XMLParser({
+const { XMLParser } = __nccwpck_require__(591);
+const { COMMON_HTML, CURRENCY, EntityDecoderImpl, XML } = __nccwpck_require__(7051);
+const entityDecoder = new EntityDecoderImpl({
+    namedEntities: { ...XML, ...COMMON_HTML, ...CURRENCY },
+    numericAllowed: true,
+    limit: {
+        maxTotalExpansions: Infinity,
+    },
+    ncr: {
+        xmlVersion: 1.1,
+    },
+});
+const parser = new XMLParser({
     attributeNamePrefix: "",
+    processEntities: {
+        enabled: true,
+        maxTotalExpansions: Infinity,
+    },
     htmlEntities: true,
+    entityDecoder: {
+        setExternalEntities: (entities) => {
+            entityDecoder.setExternalEntities(entities);
+        },
+        addInputEntities: (entities) => {
+            entityDecoder.addInputEntities(entities);
+        },
+        reset: () => {
+            entityDecoder.reset();
+        },
+        decode: (text) => {
+            return entityDecoder.decode(text);
+        },
+        setXmlVersion: (version) => void {},
+    },
     ignoreAttributes: false,
     ignoreDeclaration: true,
     parseTagValue: false,
     trimValues: false,
     tagValueProcessor: (_, val) => (val.trim() === "" && val.includes("\n") ? "" : undefined),
+    maxNestedTags: Infinity,
 });
-parser.addEntity("#xD", "\r");
-parser.addEntity("#10", "\n");
-function parseXML(xmlString) {
+exports.parseXML = function parseXML(xmlString) {
     return parser.parse(xmlString, true);
-}
+};
 
 
 /***/ }),
@@ -15266,7 +15610,7 @@ exports.InvokeStore = void 0;
                 if (globalThis.awslambda?.InvokeStore) {
                     delete globalThis.awslambda.InvokeStore;
                 }
-                globalThis.awslambda = {};
+                globalThis.awslambda = { InvokeStore: undefined };
             },
         }
         : undefined;
@@ -16690,11 +17034,21 @@ class CborShapeSerializer extends protocols.SerdeContext {
                     const [k, v] = sourceObject.$unknown;
                     newObject[k] = v;
                 }
+                else if (typeof sourceObject.__type === "string") {
+                    for (const [k, v] of Object.entries(sourceObject)) {
+                        if (!(k in newObject)) {
+                            newObject[k] = this.serialize(15, v);
+                        }
+                    }
+                }
             }
             else if (ns.isDocumentSchema()) {
                 for (const key of Object.keys(sourceObject)) {
                     newObject[key] = this.serialize(ns.getValueSchema(), sourceObject[key]);
                 }
+            }
+            else if (ns.isBigDecimalSchema()) {
+                return sourceObject;
             }
             return newObject;
         }
@@ -16791,6 +17145,16 @@ class CborShapeDeserializer extends protocols.SerdeContext {
                     const k = keys.values().next().value;
                     newObject.$unknown = [k, value[k]];
                 }
+                else if (typeof value.__type === "string") {
+                    for (const [k, v] of Object.entries(value)) {
+                        if (!(k in newObject)) {
+                            newObject[k] = v;
+                        }
+                    }
+                }
+            }
+            else if (value instanceof serde.NumericValue) {
+                return value;
             }
             return newObject;
         }
@@ -16804,8 +17168,8 @@ class SmithyRpcV2CborProtocol extends protocols.RpcProtocol {
     codec = new CborCodec();
     serializer = this.codec.createSerializer();
     deserializer = this.codec.createDeserializer();
-    constructor({ defaultNamespace }) {
-        super({ defaultNamespace });
+    constructor({ defaultNamespace, errorTypeRegistries, }) {
+        super({ defaultNamespace, errorTypeRegistries });
     }
     getShapeId() {
         return "smithy.protocols#rpcv2Cbor";
@@ -16849,15 +17213,17 @@ class SmithyRpcV2CborProtocol extends protocols.RpcProtocol {
     }
     async handleError(operationSchema, context, response, dataObject, metadata) {
         const errorName = loadSmithyRpcV2CborErrorCode(response, dataObject) ?? "Unknown";
-        let namespace = this.options.defaultNamespace;
-        if (errorName.includes("#")) {
-            [namespace] = errorName.split("#");
-        }
         const errorMetadata = {
             $metadata: metadata,
             $fault: response.statusCode <= 500 ? "client" : "server",
         };
-        const registry = schema.TypeRegistry.for(namespace);
+        let namespace = this.options.defaultNamespace;
+        if (errorName.includes("#")) {
+            [namespace] = errorName.split("#");
+        }
+        const registry = this.compositeErrorRegistry;
+        const nsRegistry = schema.TypeRegistry.for(namespace);
+        registry.copyFrom(nsRegistry);
         let errorSchema;
         try {
             errorSchema = registry.getSchema(errorName);
@@ -16866,10 +17232,11 @@ class SmithyRpcV2CborProtocol extends protocols.RpcProtocol {
             if (dataObject.Message) {
                 dataObject.message = dataObject.Message;
             }
-            const synthetic = schema.TypeRegistry.for("smithy.ts.sdk.synthetic." + namespace);
-            const baseExceptionSchema = synthetic.getBaseException();
+            const syntheticRegistry = schema.TypeRegistry.for("smithy.ts.sdk.synthetic." + namespace);
+            registry.copyFrom(syntheticRegistry);
+            const baseExceptionSchema = registry.getBaseException();
             if (baseExceptionSchema) {
-                const ErrorCtor = synthetic.getErrorCtor(baseExceptionSchema);
+                const ErrorCtor = registry.getErrorCtor(baseExceptionSchema);
                 throw Object.assign(new ErrorCtor({ name: errorName }), errorMetadata, dataObject);
             }
             throw Object.assign(new Error(errorName), errorMetadata, dataObject);
@@ -16948,9 +17315,14 @@ class SerdeContext {
 
 class HttpProtocol extends SerdeContext {
     options;
+    compositeErrorRegistry;
     constructor(options) {
         super();
         this.options = options;
+        this.compositeErrorRegistry = schema.TypeRegistry.for(options.defaultNamespace);
+        for (const etr of options.errorTypeRegistries ?? []) {
+            this.compositeErrorRegistry.copyFrom(etr);
+        }
     }
     getRequestType() {
         return protocolHttp.HttpRequest;
@@ -16995,6 +17367,9 @@ class HttpProtocol extends SerdeContext {
         }
     }
     setHostPrefix(request, operationSchema, input) {
+        if (this.serdeContext?.disableHostPrefix) {
+            return;
+        }
         const inputNs = schema.NormalizedSchema.of(operationSchema.input);
         const opTraits = schema.translateTraits(operationSchema.traits ?? {});
         if (opTraits.endpoint) {
@@ -17105,6 +17480,11 @@ class HttpBindingProtocol extends HttpProtocol {
             const memberTraits = memberNs.getMergedTraits() ?? {};
             const inputMemberValue = input[memberName];
             if (inputMemberValue == null && !memberNs.isIdempotencyToken()) {
+                if (memberTraits.httpLabel) {
+                    if (request.path.includes(`{${memberName}+}`) || request.path.includes(`{${memberName}}`)) {
+                        throw new Error(`No value provided for input HTTP label: ${memberName}.`);
+                    }
+                }
                 continue;
             }
             if (memberTraits.httpPayload) {
@@ -18002,6 +18382,9 @@ function translateTraits(indicator) {
     return traits;
 }
 
+const anno = {
+    it: Symbol.for("@smithy/nor-struct-it"),
+};
 class NormalizedSchema {
     ref;
     memberName;
@@ -18082,7 +18465,7 @@ class NormalizedSchema {
     }
     getSchema() {
         const sc = this.schema;
-        if (sc[0] === 0) {
+        if (Array.isArray(sc) && sc[0] === 0) {
             return sc[4];
         }
         return sc;
@@ -18112,6 +18495,9 @@ class NormalizedSchema {
     }
     isStructSchema() {
         const sc = this.getSchema();
+        if (typeof sc !== "object") {
+            return false;
+        }
         const id = sc[0];
         return (id === 3 ||
             id === -3 ||
@@ -18119,6 +18505,9 @@ class NormalizedSchema {
     }
     isUnionSchema() {
         const sc = this.getSchema();
+        if (typeof sc !== "object") {
+            return false;
+        }
         return sc[0] === 4;
     }
     isBlobSchema() {
@@ -18157,10 +18546,7 @@ class NormalizedSchema {
         return !!streaming || this.getSchema() === 42;
     }
     isIdempotencyToken() {
-        const match = (traits) => (traits & 0b0100) === 0b0100 ||
-            !!traits?.idempotencyToken;
-        const { normalizedTraits, traits, memberTraits } = this;
-        return match(normalizedTraits) || match(traits) || match(memberTraits);
+        return !!this.getMergedTraits().idempotencyToken;
     }
     getMergedTraits() {
         return (this.normalizedTraits ??
@@ -18241,9 +18627,19 @@ class NormalizedSchema {
             throw new Error("@smithy/core/schema - cannot iterate non-struct schema.");
         }
         const struct = this.getSchema();
-        for (let i = 0; i < struct[4].length; ++i) {
-            yield [struct[4][i], member([struct[5][i], 0], struct[4][i])];
+        const z = struct[4].length;
+        let it = struct[anno.it];
+        if (it && z === it.length) {
+            yield* it;
+            return;
         }
+        it = Array(z);
+        for (let i = 0; i < z; ++i) {
+            const k = struct[4][i];
+            const v = member([struct[5][i], 0], k);
+            yield (it[i] = [k, v]);
+        }
+        struct[anno.it] = it;
     }
 }
 function member(memberSchema, memberName) {
@@ -18312,10 +18708,24 @@ class TypeRegistry {
         }
         return TypeRegistry.registries.get(namespace);
     }
+    copyFrom(other) {
+        const { schemas, exceptions } = this;
+        for (const [k, v] of other.schemas) {
+            if (!schemas.has(k)) {
+                schemas.set(k, v);
+            }
+        }
+        for (const [k, v] of other.exceptions) {
+            if (!exceptions.has(k)) {
+                exceptions.set(k, v);
+            }
+        }
+    }
     register(shapeId, schema) {
         const qualifiedName = this.normalizeShapeId(shapeId);
-        const registry = TypeRegistry.for(qualifiedName.split("#")[0]);
-        registry.schemas.set(qualifiedName, schema);
+        for (const r of [this, TypeRegistry.for(qualifiedName.split("#")[0])]) {
+            r.schemas.set(qualifiedName, schema);
+        }
     }
     getSchema(shapeId) {
         const id = this.normalizeShapeId(shapeId);
@@ -18326,12 +18736,17 @@ class TypeRegistry {
     }
     registerError(es, ctor) {
         const $error = es;
-        const registry = TypeRegistry.for($error[1]);
-        registry.schemas.set($error[1] + "#" + $error[2], $error);
-        registry.exceptions.set($error, ctor);
+        const ns = $error[1];
+        for (const r of [this, TypeRegistry.for(ns)]) {
+            r.schemas.set(ns + "#" + $error[2], $error);
+            r.exceptions.set($error, ctor);
+        }
     }
     getErrorCtor(es) {
         const $error = es;
+        if (this.exceptions.has($error)) {
+            return this.exceptions.get($error);
+        }
         const registry = TypeRegistry.for($error[1]);
         return registry.exceptions.get($error);
     }
@@ -20774,8 +21189,15 @@ function writeBody(httpRequest, body) {
         return;
     }
     if (body) {
-        if (Buffer.isBuffer(body) || typeof body === "string") {
-            httpRequest.end(body);
+        const isBuffer = Buffer.isBuffer(body);
+        const isString = typeof body === "string";
+        if (isBuffer || isString) {
+            if (isBuffer && body.byteLength === 0) {
+                httpRequest.end();
+            }
+            else {
+                httpRequest.end(body);
+            }
             return;
         }
         const uint8 = body;
@@ -20843,7 +21265,7 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
         });
     }
     resolveDefaultConfig(options) {
-        const { requestTimeout, connectionTimeout, socketTimeout, socketAcquisitionWarningTimeout, httpAgent, httpsAgent, throwOnRequestTimeout, } = options || {};
+        const { requestTimeout, connectionTimeout, socketTimeout, socketAcquisitionWarningTimeout, httpAgent, httpsAgent, throwOnRequestTimeout, logger, } = options || {};
         const keepAlive = true;
         const maxSockets = 50;
         return {
@@ -20866,7 +21288,7 @@ or increase socketAcquisitionWarningTimeout=(millis) in the NodeHttpHandler conf
                 }
                 return new https.Agent({ keepAlive, maxSockets, ...httpsAgent });
             })(),
-            logger: console,
+            logger,
         };
     }
     destroy() {
@@ -22890,9 +23312,8 @@ class ClassBuilder {
 
 const SENSITIVE_STRING = "***SensitiveInformation***";
 
-const createAggregatedClient = (commands, Client) => {
-    for (const command of Object.keys(commands)) {
-        const CommandCtor = commands[command];
+const createAggregatedClient = (commands, Client, options) => {
+    for (const [command, CommandCtor] of Object.entries(commands)) {
         const methodImpl = async function (args, optionsOrCb, cb) {
             const command = new CommandCtor(args);
             if (typeof optionsOrCb === "function") {
@@ -22909,6 +23330,33 @@ const createAggregatedClient = (commands, Client) => {
         };
         const methodName = (command[0].toLowerCase() + command.slice(1)).replace(/Command$/, "");
         Client.prototype[methodName] = methodImpl;
+    }
+    const { paginators = {}, waiters = {} } = options ?? {};
+    for (const [paginatorName, paginatorFn] of Object.entries(paginators)) {
+        if (Client.prototype[paginatorName] === void 0) {
+            Client.prototype[paginatorName] = function (commandInput = {}, paginationConfiguration, ...rest) {
+                return paginatorFn({
+                    ...paginationConfiguration,
+                    client: this,
+                }, commandInput, ...rest);
+            };
+        }
+    }
+    for (const [waiterName, waiterFn] of Object.entries(waiters)) {
+        if (Client.prototype[waiterName] === void 0) {
+            Client.prototype[waiterName] = async function (commandInput = {}, waiterConfiguration, ...rest) {
+                let config = waiterConfiguration;
+                if (typeof waiterConfiguration === "number") {
+                    config = {
+                        maxWaitTime: waiterConfiguration,
+                    };
+                }
+                return waiterFn({
+                    ...config,
+                    client: this,
+                }, commandInput, ...rest);
+            };
+        }
     }
 };
 
@@ -23275,46 +23723,43 @@ Object.keys(serde).forEach(function (k) {
 /***/ 690:
 /***/ ((__unused_webpack_module, exports) => {
 
-"use strict";
-
-
-exports.HttpAuthLocation = void 0;
+var HttpAuthLocation;
 (function (HttpAuthLocation) {
     HttpAuthLocation["HEADER"] = "header";
     HttpAuthLocation["QUERY"] = "query";
-})(exports.HttpAuthLocation || (exports.HttpAuthLocation = {}));
+})(HttpAuthLocation || (HttpAuthLocation = {}));
 
-exports.HttpApiKeyAuthLocation = void 0;
+var HttpApiKeyAuthLocation;
 (function (HttpApiKeyAuthLocation) {
     HttpApiKeyAuthLocation["HEADER"] = "header";
     HttpApiKeyAuthLocation["QUERY"] = "query";
-})(exports.HttpApiKeyAuthLocation || (exports.HttpApiKeyAuthLocation = {}));
+})(HttpApiKeyAuthLocation || (HttpApiKeyAuthLocation = {}));
 
-exports.EndpointURLScheme = void 0;
+var EndpointURLScheme;
 (function (EndpointURLScheme) {
     EndpointURLScheme["HTTP"] = "http";
     EndpointURLScheme["HTTPS"] = "https";
-})(exports.EndpointURLScheme || (exports.EndpointURLScheme = {}));
+})(EndpointURLScheme || (EndpointURLScheme = {}));
 
-exports.AlgorithmId = void 0;
+var AlgorithmId;
 (function (AlgorithmId) {
     AlgorithmId["MD5"] = "md5";
     AlgorithmId["CRC32"] = "crc32";
     AlgorithmId["CRC32C"] = "crc32c";
     AlgorithmId["SHA1"] = "sha1";
     AlgorithmId["SHA256"] = "sha256";
-})(exports.AlgorithmId || (exports.AlgorithmId = {}));
+})(AlgorithmId || (AlgorithmId = {}));
 const getChecksumConfiguration = (runtimeConfig) => {
     const checksumAlgorithms = [];
     if (runtimeConfig.sha256 !== undefined) {
         checksumAlgorithms.push({
-            algorithmId: () => exports.AlgorithmId.SHA256,
+            algorithmId: () => AlgorithmId.SHA256,
             checksumConstructor: () => runtimeConfig.sha256,
         });
     }
     if (runtimeConfig.md5 != undefined) {
         checksumAlgorithms.push({
-            algorithmId: () => exports.AlgorithmId.MD5,
+            algorithmId: () => AlgorithmId.MD5,
             checksumConstructor: () => runtimeConfig.md5,
         });
     }
@@ -23342,28 +23787,35 @@ const resolveDefaultRuntimeConfig = (config) => {
     return resolveChecksumRuntimeConfig(config);
 };
 
-exports.FieldPosition = void 0;
+var FieldPosition;
 (function (FieldPosition) {
     FieldPosition[FieldPosition["HEADER"] = 0] = "HEADER";
     FieldPosition[FieldPosition["TRAILER"] = 1] = "TRAILER";
-})(exports.FieldPosition || (exports.FieldPosition = {}));
+})(FieldPosition || (FieldPosition = {}));
 
 const SMITHY_CONTEXT_KEY = "__smithy_context";
 
-exports.IniSectionType = void 0;
+var IniSectionType;
 (function (IniSectionType) {
     IniSectionType["PROFILE"] = "profile";
     IniSectionType["SSO_SESSION"] = "sso-session";
     IniSectionType["SERVICES"] = "services";
-})(exports.IniSectionType || (exports.IniSectionType = {}));
+})(IniSectionType || (IniSectionType = {}));
 
-exports.RequestHandlerProtocol = void 0;
+var RequestHandlerProtocol;
 (function (RequestHandlerProtocol) {
     RequestHandlerProtocol["HTTP_0_9"] = "http/0.9";
     RequestHandlerProtocol["HTTP_1_0"] = "http/1.0";
     RequestHandlerProtocol["TDS_8_0"] = "tds/8.0";
-})(exports.RequestHandlerProtocol || (exports.RequestHandlerProtocol = {}));
+})(RequestHandlerProtocol || (RequestHandlerProtocol = {}));
 
+exports.AlgorithmId = AlgorithmId;
+exports.EndpointURLScheme = EndpointURLScheme;
+exports.FieldPosition = FieldPosition;
+exports.HttpApiKeyAuthLocation = HttpApiKeyAuthLocation;
+exports.HttpAuthLocation = HttpAuthLocation;
+exports.IniSectionType = IniSectionType;
+exports.RequestHandlerProtocol = RequestHandlerProtocol;
 exports.SMITHY_CONTEXT_KEY = SMITHY_CONTEXT_KEY;
 exports.getDefaultClientConfiguration = getDefaultClientConfiguration;
 exports.resolveDefaultRuntimeConfig = resolveDefaultRuntimeConfig;
@@ -24907,29 +25359,80 @@ function modeOf(chunk, allowBuffer = true) {
 
 /***/ }),
 
+/***/ 3492:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getAwsChunkedEncodingStream = void 0;
+const getAwsChunkedEncodingStream = (readableStream, options) => {
+    const { base64Encoder, bodyLengthChecker, checksumAlgorithmFn, checksumLocationName, streamHasher } = options;
+    const checksumRequired = base64Encoder !== undefined &&
+        bodyLengthChecker !== undefined &&
+        checksumAlgorithmFn !== undefined &&
+        checksumLocationName !== undefined &&
+        streamHasher !== undefined;
+    const digest = checksumRequired ? streamHasher(checksumAlgorithmFn, readableStream) : undefined;
+    const reader = readableStream.getReader();
+    return new ReadableStream({
+        async pull(controller) {
+            const { value, done } = await reader.read();
+            if (done) {
+                controller.enqueue(`0\r\n`);
+                if (checksumRequired) {
+                    const checksum = base64Encoder(await digest);
+                    controller.enqueue(`${checksumLocationName}:${checksum}\r\n`);
+                    controller.enqueue(`\r\n`);
+                }
+                controller.close();
+            }
+            else {
+                controller.enqueue(`${(bodyLengthChecker(value) || 0).toString(16)}\r\n${value}\r\n`);
+            }
+        },
+    });
+};
+exports.getAwsChunkedEncodingStream = getAwsChunkedEncodingStream;
+
+
+/***/ }),
+
 /***/ 6522:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getAwsChunkedEncodingStream = void 0;
-const stream_1 = __nccwpck_require__(2203);
-const getAwsChunkedEncodingStream = (readableStream, options) => {
+exports.getAwsChunkedEncodingStream = getAwsChunkedEncodingStream;
+const node_stream_1 = __nccwpck_require__(7075);
+const getAwsChunkedEncodingStream_browser_1 = __nccwpck_require__(3492);
+const stream_type_check_1 = __nccwpck_require__(4414);
+function getAwsChunkedEncodingStream(stream, options) {
+    const readable = stream;
+    const readableStream = stream;
+    if ((0, stream_type_check_1.isReadableStream)(readableStream)) {
+        return (0, getAwsChunkedEncodingStream_browser_1.getAwsChunkedEncodingStream)(readableStream, options);
+    }
     const { base64Encoder, bodyLengthChecker, checksumAlgorithmFn, checksumLocationName, streamHasher } = options;
     const checksumRequired = base64Encoder !== undefined &&
         checksumAlgorithmFn !== undefined &&
         checksumLocationName !== undefined &&
         streamHasher !== undefined;
-    const digest = checksumRequired ? streamHasher(checksumAlgorithmFn, readableStream) : undefined;
-    const awsChunkedEncodingStream = new stream_1.Readable({ read: () => { } });
-    readableStream.on("data", (data) => {
+    const digest = checksumRequired ? streamHasher(checksumAlgorithmFn, readable) : undefined;
+    const awsChunkedEncodingStream = new node_stream_1.Readable({
+        read: () => { },
+    });
+    readable.on("data", (data) => {
         const length = bodyLengthChecker(data) || 0;
+        if (length === 0) {
+            return;
+        }
         awsChunkedEncodingStream.push(`${length.toString(16)}\r\n`);
         awsChunkedEncodingStream.push(data);
         awsChunkedEncodingStream.push("\r\n");
     });
-    readableStream.on("end", async () => {
+    readable.on("end", async () => {
         awsChunkedEncodingStream.push(`0\r\n`);
         if (checksumRequired) {
             const checksum = base64Encoder(await digest);
@@ -24939,8 +25442,7 @@ const getAwsChunkedEncodingStream = (readableStream, options) => {
         awsChunkedEncodingStream.push(null);
     });
     return awsChunkedEncodingStream;
-};
-exports.getAwsChunkedEncodingStream = getAwsChunkedEncodingStream;
+}
 
 
 /***/ }),
@@ -25076,6 +25578,14 @@ class Uint8ArrayBlobAdapter extends Uint8Array {
     }
 }
 
+Object.defineProperty(exports, "isBlob", ({
+    enumerable: true,
+    get: function () { return streamTypeCheck.isBlob; }
+}));
+Object.defineProperty(exports, "isReadableStream", ({
+    enumerable: true,
+    get: function () { return streamTypeCheck.isReadableStream; }
+}));
 exports.Uint8ArrayBlobAdapter = Uint8ArrayBlobAdapter;
 Object.keys(ChecksumStream).forEach(function (k) {
     if (k !== 'default' && !Object.prototype.hasOwnProperty.call(exports, k)) Object.defineProperty(exports, k, {
@@ -25117,12 +25627,6 @@ Object.keys(splitStream).forEach(function (k) {
     if (k !== 'default' && !Object.prototype.hasOwnProperty.call(exports, k)) Object.defineProperty(exports, k, {
         enumerable: true,
         get: function () { return splitStream[k]; }
-    });
-});
-Object.keys(streamTypeCheck).forEach(function (k) {
-    if (k !== 'default' && !Object.prototype.hasOwnProperty.call(exports, k)) Object.defineProperty(exports, k, {
-        enumerable: true,
-        get: function () { return streamTypeCheck[k]; }
     });
 });
 
@@ -50467,7 +50971,7 @@ module.exports = parseParams
 /***/ 591:
 /***/ ((module) => {
 
-(()=>{"use strict";var t={d:(e,n)=>{for(var i in n)t.o(n,i)&&!t.o(e,i)&&Object.defineProperty(e,i,{enumerable:!0,get:n[i]})},o:(t,e)=>Object.prototype.hasOwnProperty.call(t,e),r:t=>{"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(t,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(t,"__esModule",{value:!0})}},e={};t.r(e),t.d(e,{XMLBuilder:()=>ft,XMLParser:()=>st,XMLValidator:()=>mt});const n=":A-Za-z_\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD",i=new RegExp("^["+n+"]["+n+"\\-.\\d\\u00B7\\u0300-\\u036F\\u203F-\\u2040]*$");function s(t,e){const n=[];let i=e.exec(t);for(;i;){const s=[];s.startIndex=e.lastIndex-i[0].length;const r=i.length;for(let t=0;t<r;t++)s.push(i[t]);n.push(s),i=e.exec(t)}return n}const r=function(t){return!(null==i.exec(t))},o={allowBooleanAttributes:!1,unpairedTags:[]};function a(t,e){e=Object.assign({},o,e);const n=[];let i=!1,s=!1;"\ufeff"===t[0]&&(t=t.substr(1));for(let o=0;o<t.length;o++)if("<"===t[o]&&"?"===t[o+1]){if(o+=2,o=u(t,o),o.err)return o}else{if("<"!==t[o]){if(l(t[o]))continue;return x("InvalidChar","char '"+t[o]+"' is not expected.",N(t,o))}{let a=o;if(o++,"!"===t[o]){o=h(t,o);continue}{let d=!1;"/"===t[o]&&(d=!0,o++);let f="";for(;o<t.length&&">"!==t[o]&&" "!==t[o]&&"\t"!==t[o]&&"\n"!==t[o]&&"\r"!==t[o];o++)f+=t[o];if(f=f.trim(),"/"===f[f.length-1]&&(f=f.substring(0,f.length-1),o--),!r(f)){let e;return e=0===f.trim().length?"Invalid space after '<'.":"Tag '"+f+"' is an invalid name.",x("InvalidTag",e,N(t,o))}const p=c(t,o);if(!1===p)return x("InvalidAttr","Attributes for '"+f+"' have open quote.",N(t,o));let b=p.value;if(o=p.index,"/"===b[b.length-1]){const n=o-b.length;b=b.substring(0,b.length-1);const s=g(b,e);if(!0!==s)return x(s.err.code,s.err.msg,N(t,n+s.err.line));i=!0}else if(d){if(!p.tagClosed)return x("InvalidTag","Closing tag '"+f+"' doesn't have proper closing.",N(t,o));if(b.trim().length>0)return x("InvalidTag","Closing tag '"+f+"' can't have attributes or invalid starting.",N(t,a));if(0===n.length)return x("InvalidTag","Closing tag '"+f+"' has not been opened.",N(t,a));{const e=n.pop();if(f!==e.tagName){let n=N(t,e.tagStartPos);return x("InvalidTag","Expected closing tag '"+e.tagName+"' (opened in line "+n.line+", col "+n.col+") instead of closing tag '"+f+"'.",N(t,a))}0==n.length&&(s=!0)}}else{const r=g(b,e);if(!0!==r)return x(r.err.code,r.err.msg,N(t,o-b.length+r.err.line));if(!0===s)return x("InvalidXml","Multiple possible root nodes found.",N(t,o));-1!==e.unpairedTags.indexOf(f)||n.push({tagName:f,tagStartPos:a}),i=!0}for(o++;o<t.length;o++)if("<"===t[o]){if("!"===t[o+1]){o++,o=h(t,o);continue}if("?"!==t[o+1])break;if(o=u(t,++o),o.err)return o}else if("&"===t[o]){const e=m(t,o);if(-1==e)return x("InvalidChar","char '&' is not expected.",N(t,o));o=e}else if(!0===s&&!l(t[o]))return x("InvalidXml","Extra text at the end",N(t,o));"<"===t[o]&&o--}}}return i?1==n.length?x("InvalidTag","Unclosed tag '"+n[0].tagName+"'.",N(t,n[0].tagStartPos)):!(n.length>0)||x("InvalidXml","Invalid '"+JSON.stringify(n.map((t=>t.tagName)),null,4).replace(/\r?\n/g,"")+"' found.",{line:1,col:1}):x("InvalidXml","Start tag expected.",1)}function l(t){return" "===t||"\t"===t||"\n"===t||"\r"===t}function u(t,e){const n=e;for(;e<t.length;e++)if("?"!=t[e]&&" "!=t[e]);else{const i=t.substr(n,e-n);if(e>5&&"xml"===i)return x("InvalidXml","XML declaration allowed only at the start of the document.",N(t,e));if("?"==t[e]&&">"==t[e+1]){e++;break}}return e}function h(t,e){if(t.length>e+5&&"-"===t[e+1]&&"-"===t[e+2]){for(e+=3;e<t.length;e++)if("-"===t[e]&&"-"===t[e+1]&&">"===t[e+2]){e+=2;break}}else if(t.length>e+8&&"D"===t[e+1]&&"O"===t[e+2]&&"C"===t[e+3]&&"T"===t[e+4]&&"Y"===t[e+5]&&"P"===t[e+6]&&"E"===t[e+7]){let n=1;for(e+=8;e<t.length;e++)if("<"===t[e])n++;else if(">"===t[e]&&(n--,0===n))break}else if(t.length>e+9&&"["===t[e+1]&&"C"===t[e+2]&&"D"===t[e+3]&&"A"===t[e+4]&&"T"===t[e+5]&&"A"===t[e+6]&&"["===t[e+7])for(e+=8;e<t.length;e++)if("]"===t[e]&&"]"===t[e+1]&&">"===t[e+2]){e+=2;break}return e}const d='"',f="'";function c(t,e){let n="",i="",s=!1;for(;e<t.length;e++){if(t[e]===d||t[e]===f)""===i?i=t[e]:i!==t[e]||(i="");else if(">"===t[e]&&""===i){s=!0;break}n+=t[e]}return""===i&&{value:n,index:e,tagClosed:s}}const p=new RegExp("(\\s*)([^\\s=]+)(\\s*=)?(\\s*(['\"])(([\\s\\S])*?)\\5)?","g");function g(t,e){const n=s(t,p),i={};for(let t=0;t<n.length;t++){if(0===n[t][1].length)return x("InvalidAttr","Attribute '"+n[t][2]+"' has no space in starting.",E(n[t]));if(void 0!==n[t][3]&&void 0===n[t][4])return x("InvalidAttr","Attribute '"+n[t][2]+"' is without value.",E(n[t]));if(void 0===n[t][3]&&!e.allowBooleanAttributes)return x("InvalidAttr","boolean attribute '"+n[t][2]+"' is not allowed.",E(n[t]));const s=n[t][2];if(!b(s))return x("InvalidAttr","Attribute '"+s+"' is an invalid name.",E(n[t]));if(i.hasOwnProperty(s))return x("InvalidAttr","Attribute '"+s+"' is repeated.",E(n[t]));i[s]=1}return!0}function m(t,e){if(";"===t[++e])return-1;if("#"===t[e])return function(t,e){let n=/\d/;for("x"===t[e]&&(e++,n=/[\da-fA-F]/);e<t.length;e++){if(";"===t[e])return e;if(!t[e].match(n))break}return-1}(t,++e);let n=0;for(;e<t.length;e++,n++)if(!(t[e].match(/\w/)&&n<20)){if(";"===t[e])break;return-1}return e}function x(t,e,n){return{err:{code:t,msg:e,line:n.line||n,col:n.col}}}function b(t){return r(t)}function N(t,e){const n=t.substring(0,e).split(/\r?\n/);return{line:n.length,col:n[n.length-1].length+1}}function E(t){return t.startIndex+t[1].length}const v={preserveOrder:!1,attributeNamePrefix:"@_",attributesGroupName:!1,textNodeName:"#text",ignoreAttributes:!0,removeNSPrefix:!1,allowBooleanAttributes:!1,parseTagValue:!0,parseAttributeValue:!1,trimValues:!0,cdataPropName:!1,numberParseOptions:{hex:!0,leadingZeros:!0,eNotation:!0},tagValueProcessor:function(t,e){return e},attributeValueProcessor:function(t,e){return e},stopNodes:[],alwaysCreateTextNode:!1,isArray:()=>!1,commentPropName:!1,unpairedTags:[],processEntities:!0,htmlEntities:!1,ignoreDeclaration:!1,ignorePiTags:!1,transformTagName:!1,transformAttributeName:!1,updateTag:function(t,e,n){return t},captureMetaData:!1};let y;y="function"!=typeof Symbol?"@@xmlMetadata":Symbol("XML Node Metadata");class T{constructor(t){this.tagname=t,this.child=[],this[":@"]={}}add(t,e){"__proto__"===t&&(t="#__proto__"),this.child.push({[t]:e})}addChild(t,e){"__proto__"===t.tagname&&(t.tagname="#__proto__"),t[":@"]&&Object.keys(t[":@"]).length>0?this.child.push({[t.tagname]:t.child,":@":t[":@"]}):this.child.push({[t.tagname]:t.child}),void 0!==e&&(this.child[this.child.length-1][y]={startIndex:e})}static getMetaDataSymbol(){return y}}function w(t,e){const n={};if("O"!==t[e+3]||"C"!==t[e+4]||"T"!==t[e+5]||"Y"!==t[e+6]||"P"!==t[e+7]||"E"!==t[e+8])throw new Error("Invalid Tag instead of DOCTYPE");{e+=9;let i=1,s=!1,r=!1,o="";for(;e<t.length;e++)if("<"!==t[e]||r)if(">"===t[e]){if(r?"-"===t[e-1]&&"-"===t[e-2]&&(r=!1,i--):i--,0===i)break}else"["===t[e]?s=!0:o+=t[e];else{if(s&&C(t,"!ENTITY",e)){let i,s;e+=7,[i,s,e]=O(t,e+1),-1===s.indexOf("&")&&(n[i]={regx:RegExp(`&${i};`,"g"),val:s})}else if(s&&C(t,"!ELEMENT",e)){e+=8;const{index:n}=S(t,e+1);e=n}else if(s&&C(t,"!ATTLIST",e))e+=8;else if(s&&C(t,"!NOTATION",e)){e+=9;const{index:n}=A(t,e+1);e=n}else{if(!C(t,"!--",e))throw new Error("Invalid DOCTYPE");r=!0}i++,o=""}if(0!==i)throw new Error("Unclosed DOCTYPE")}return{entities:n,i:e}}const P=(t,e)=>{for(;e<t.length&&/\s/.test(t[e]);)e++;return e};function O(t,e){e=P(t,e);let n="";for(;e<t.length&&!/\s/.test(t[e])&&'"'!==t[e]&&"'"!==t[e];)n+=t[e],e++;if($(n),e=P(t,e),"SYSTEM"===t.substring(e,e+6).toUpperCase())throw new Error("External entities are not supported");if("%"===t[e])throw new Error("Parameter entities are not supported");let i="";return[e,i]=I(t,e,"entity"),[n,i,--e]}function A(t,e){e=P(t,e);let n="";for(;e<t.length&&!/\s/.test(t[e]);)n+=t[e],e++;$(n),e=P(t,e);const i=t.substring(e,e+6).toUpperCase();if("SYSTEM"!==i&&"PUBLIC"!==i)throw new Error(`Expected SYSTEM or PUBLIC, found "${i}"`);e+=i.length,e=P(t,e);let s=null,r=null;if("PUBLIC"===i)[e,s]=I(t,e,"publicIdentifier"),'"'!==t[e=P(t,e)]&&"'"!==t[e]||([e,r]=I(t,e,"systemIdentifier"));else if("SYSTEM"===i&&([e,r]=I(t,e,"systemIdentifier"),!r))throw new Error("Missing mandatory system identifier for SYSTEM notation");return{notationName:n,publicIdentifier:s,systemIdentifier:r,index:--e}}function I(t,e,n){let i="";const s=t[e];if('"'!==s&&"'"!==s)throw new Error(`Expected quoted string, found "${s}"`);for(e++;e<t.length&&t[e]!==s;)i+=t[e],e++;if(t[e]!==s)throw new Error(`Unterminated ${n} value`);return[++e,i]}function S(t,e){e=P(t,e);let n="";for(;e<t.length&&!/\s/.test(t[e]);)n+=t[e],e++;if(!$(n))throw new Error(`Invalid element name: "${n}"`);let i="";if("E"===t[e=P(t,e)]&&C(t,"MPTY",e))e+=4;else if("A"===t[e]&&C(t,"NY",e))e+=2;else{if("("!==t[e])throw new Error(`Invalid Element Expression, found "${t[e]}"`);for(e++;e<t.length&&")"!==t[e];)i+=t[e],e++;if(")"!==t[e])throw new Error("Unterminated content model")}return{elementName:n,contentModel:i.trim(),index:e}}function C(t,e,n){for(let i=0;i<e.length;i++)if(e[i]!==t[n+i+1])return!1;return!0}function $(t){if(r(t))return t;throw new Error(`Invalid entity name ${t}`)}const j=/^[-+]?0x[a-fA-F0-9]+$/,D=/^([\-\+])?(0*)([0-9]*(\.[0-9]*)?)$/,V={hex:!0,leadingZeros:!0,decimalPoint:".",eNotation:!0};const M=/^([-+])?(0*)(\d*(\.\d*)?[eE][-\+]?\d+)$/;function _(t){return"function"==typeof t?t:Array.isArray(t)?e=>{for(const n of t){if("string"==typeof n&&e===n)return!0;if(n instanceof RegExp&&n.test(e))return!0}}:()=>!1}class k{constructor(t){this.options=t,this.currentNode=null,this.tagsNodeStack=[],this.docTypeEntities={},this.lastEntities={apos:{regex:/&(apos|#39|#x27);/g,val:"'"},gt:{regex:/&(gt|#62|#x3E);/g,val:">"},lt:{regex:/&(lt|#60|#x3C);/g,val:"<"},quot:{regex:/&(quot|#34|#x22);/g,val:'"'}},this.ampEntity={regex:/&(amp|#38|#x26);/g,val:"&"},this.htmlEntities={space:{regex:/&(nbsp|#160);/g,val:" "},cent:{regex:/&(cent|#162);/g,val:"¢"},pound:{regex:/&(pound|#163);/g,val:"£"},yen:{regex:/&(yen|#165);/g,val:"¥"},euro:{regex:/&(euro|#8364);/g,val:"€"},copyright:{regex:/&(copy|#169);/g,val:"©"},reg:{regex:/&(reg|#174);/g,val:"®"},inr:{regex:/&(inr|#8377);/g,val:"₹"},num_dec:{regex:/&#([0-9]{1,7});/g,val:(t,e)=>String.fromCodePoint(Number.parseInt(e,10))},num_hex:{regex:/&#x([0-9a-fA-F]{1,6});/g,val:(t,e)=>String.fromCodePoint(Number.parseInt(e,16))}},this.addExternalEntities=F,this.parseXml=X,this.parseTextData=L,this.resolveNameSpace=B,this.buildAttributesMap=G,this.isItStopNode=Z,this.replaceEntitiesValue=R,this.readStopNodeData=J,this.saveTextToParentTag=q,this.addChild=Y,this.ignoreAttributesFn=_(this.options.ignoreAttributes)}}function F(t){const e=Object.keys(t);for(let n=0;n<e.length;n++){const i=e[n];this.lastEntities[i]={regex:new RegExp("&"+i+";","g"),val:t[i]}}}function L(t,e,n,i,s,r,o){if(void 0!==t&&(this.options.trimValues&&!i&&(t=t.trim()),t.length>0)){o||(t=this.replaceEntitiesValue(t));const i=this.options.tagValueProcessor(e,t,n,s,r);return null==i?t:typeof i!=typeof t||i!==t?i:this.options.trimValues||t.trim()===t?H(t,this.options.parseTagValue,this.options.numberParseOptions):t}}function B(t){if(this.options.removeNSPrefix){const e=t.split(":"),n="/"===t.charAt(0)?"/":"";if("xmlns"===e[0])return"";2===e.length&&(t=n+e[1])}return t}const U=new RegExp("([^\\s=]+)\\s*(=\\s*(['\"])([\\s\\S]*?)\\3)?","gm");function G(t,e,n){if(!0!==this.options.ignoreAttributes&&"string"==typeof t){const n=s(t,U),i=n.length,r={};for(let t=0;t<i;t++){const i=this.resolveNameSpace(n[t][1]);if(this.ignoreAttributesFn(i,e))continue;let s=n[t][4],o=this.options.attributeNamePrefix+i;if(i.length)if(this.options.transformAttributeName&&(o=this.options.transformAttributeName(o)),"__proto__"===o&&(o="#__proto__"),void 0!==s){this.options.trimValues&&(s=s.trim()),s=this.replaceEntitiesValue(s);const t=this.options.attributeValueProcessor(i,s,e);r[o]=null==t?s:typeof t!=typeof s||t!==s?t:H(s,this.options.parseAttributeValue,this.options.numberParseOptions)}else this.options.allowBooleanAttributes&&(r[o]=!0)}if(!Object.keys(r).length)return;if(this.options.attributesGroupName){const t={};return t[this.options.attributesGroupName]=r,t}return r}}const X=function(t){t=t.replace(/\r\n?/g,"\n");const e=new T("!xml");let n=e,i="",s="";for(let r=0;r<t.length;r++)if("<"===t[r])if("/"===t[r+1]){const e=W(t,">",r,"Closing Tag is not closed.");let o=t.substring(r+2,e).trim();if(this.options.removeNSPrefix){const t=o.indexOf(":");-1!==t&&(o=o.substr(t+1))}this.options.transformTagName&&(o=this.options.transformTagName(o)),n&&(i=this.saveTextToParentTag(i,n,s));const a=s.substring(s.lastIndexOf(".")+1);if(o&&-1!==this.options.unpairedTags.indexOf(o))throw new Error(`Unpaired tag can not be used as closing tag: </${o}>`);let l=0;a&&-1!==this.options.unpairedTags.indexOf(a)?(l=s.lastIndexOf(".",s.lastIndexOf(".")-1),this.tagsNodeStack.pop()):l=s.lastIndexOf("."),s=s.substring(0,l),n=this.tagsNodeStack.pop(),i="",r=e}else if("?"===t[r+1]){let e=z(t,r,!1,"?>");if(!e)throw new Error("Pi Tag is not closed.");if(i=this.saveTextToParentTag(i,n,s),this.options.ignoreDeclaration&&"?xml"===e.tagName||this.options.ignorePiTags);else{const t=new T(e.tagName);t.add(this.options.textNodeName,""),e.tagName!==e.tagExp&&e.attrExpPresent&&(t[":@"]=this.buildAttributesMap(e.tagExp,s,e.tagName)),this.addChild(n,t,s,r)}r=e.closeIndex+1}else if("!--"===t.substr(r+1,3)){const e=W(t,"--\x3e",r+4,"Comment is not closed.");if(this.options.commentPropName){const o=t.substring(r+4,e-2);i=this.saveTextToParentTag(i,n,s),n.add(this.options.commentPropName,[{[this.options.textNodeName]:o}])}r=e}else if("!D"===t.substr(r+1,2)){const e=w(t,r);this.docTypeEntities=e.entities,r=e.i}else if("!["===t.substr(r+1,2)){const e=W(t,"]]>",r,"CDATA is not closed.")-2,o=t.substring(r+9,e);i=this.saveTextToParentTag(i,n,s);let a=this.parseTextData(o,n.tagname,s,!0,!1,!0,!0);null==a&&(a=""),this.options.cdataPropName?n.add(this.options.cdataPropName,[{[this.options.textNodeName]:o}]):n.add(this.options.textNodeName,a),r=e+2}else{let o=z(t,r,this.options.removeNSPrefix),a=o.tagName;const l=o.rawTagName;let u=o.tagExp,h=o.attrExpPresent,d=o.closeIndex;this.options.transformTagName&&(a=this.options.transformTagName(a)),n&&i&&"!xml"!==n.tagname&&(i=this.saveTextToParentTag(i,n,s,!1));const f=n;f&&-1!==this.options.unpairedTags.indexOf(f.tagname)&&(n=this.tagsNodeStack.pop(),s=s.substring(0,s.lastIndexOf("."))),a!==e.tagname&&(s+=s?"."+a:a);const c=r;if(this.isItStopNode(this.options.stopNodes,s,a)){let e="";if(u.length>0&&u.lastIndexOf("/")===u.length-1)"/"===a[a.length-1]?(a=a.substr(0,a.length-1),s=s.substr(0,s.length-1),u=a):u=u.substr(0,u.length-1),r=o.closeIndex;else if(-1!==this.options.unpairedTags.indexOf(a))r=o.closeIndex;else{const n=this.readStopNodeData(t,l,d+1);if(!n)throw new Error(`Unexpected end of ${l}`);r=n.i,e=n.tagContent}const i=new T(a);a!==u&&h&&(i[":@"]=this.buildAttributesMap(u,s,a)),e&&(e=this.parseTextData(e,a,s,!0,h,!0,!0)),s=s.substr(0,s.lastIndexOf(".")),i.add(this.options.textNodeName,e),this.addChild(n,i,s,c)}else{if(u.length>0&&u.lastIndexOf("/")===u.length-1){"/"===a[a.length-1]?(a=a.substr(0,a.length-1),s=s.substr(0,s.length-1),u=a):u=u.substr(0,u.length-1),this.options.transformTagName&&(a=this.options.transformTagName(a));const t=new T(a);a!==u&&h&&(t[":@"]=this.buildAttributesMap(u,s,a)),this.addChild(n,t,s,c),s=s.substr(0,s.lastIndexOf("."))}else{const t=new T(a);this.tagsNodeStack.push(n),a!==u&&h&&(t[":@"]=this.buildAttributesMap(u,s,a)),this.addChild(n,t,s,c),n=t}i="",r=d}}else i+=t[r];return e.child};function Y(t,e,n,i){this.options.captureMetaData||(i=void 0);const s=this.options.updateTag(e.tagname,n,e[":@"]);!1===s||("string"==typeof s?(e.tagname=s,t.addChild(e,i)):t.addChild(e,i))}const R=function(t){if(this.options.processEntities){for(let e in this.docTypeEntities){const n=this.docTypeEntities[e];t=t.replace(n.regx,n.val)}for(let e in this.lastEntities){const n=this.lastEntities[e];t=t.replace(n.regex,n.val)}if(this.options.htmlEntities)for(let e in this.htmlEntities){const n=this.htmlEntities[e];t=t.replace(n.regex,n.val)}t=t.replace(this.ampEntity.regex,this.ampEntity.val)}return t};function q(t,e,n,i){return t&&(void 0===i&&(i=0===e.child.length),void 0!==(t=this.parseTextData(t,e.tagname,n,!1,!!e[":@"]&&0!==Object.keys(e[":@"]).length,i))&&""!==t&&e.add(this.options.textNodeName,t),t=""),t}function Z(t,e,n){const i="*."+n;for(const n in t){const s=t[n];if(i===s||e===s)return!0}return!1}function W(t,e,n,i){const s=t.indexOf(e,n);if(-1===s)throw new Error(i);return s+e.length-1}function z(t,e,n,i=">"){const s=function(t,e,n=">"){let i,s="";for(let r=e;r<t.length;r++){let e=t[r];if(i)e===i&&(i="");else if('"'===e||"'"===e)i=e;else if(e===n[0]){if(!n[1])return{data:s,index:r};if(t[r+1]===n[1])return{data:s,index:r}}else"\t"===e&&(e=" ");s+=e}}(t,e+1,i);if(!s)return;let r=s.data;const o=s.index,a=r.search(/\s/);let l=r,u=!0;-1!==a&&(l=r.substring(0,a),r=r.substring(a+1).trimStart());const h=l;if(n){const t=l.indexOf(":");-1!==t&&(l=l.substr(t+1),u=l!==s.data.substr(t+1))}return{tagName:l,tagExp:r,closeIndex:o,attrExpPresent:u,rawTagName:h}}function J(t,e,n){const i=n;let s=1;for(;n<t.length;n++)if("<"===t[n])if("/"===t[n+1]){const r=W(t,">",n,`${e} is not closed`);if(t.substring(n+2,r).trim()===e&&(s--,0===s))return{tagContent:t.substring(i,n),i:r};n=r}else if("?"===t[n+1])n=W(t,"?>",n+1,"StopNode is not closed.");else if("!--"===t.substr(n+1,3))n=W(t,"--\x3e",n+3,"StopNode is not closed.");else if("!["===t.substr(n+1,2))n=W(t,"]]>",n,"StopNode is not closed.")-2;else{const i=z(t,n,">");i&&((i&&i.tagName)===e&&"/"!==i.tagExp[i.tagExp.length-1]&&s++,n=i.closeIndex)}}function H(t,e,n){if(e&&"string"==typeof t){const e=t.trim();return"true"===e||"false"!==e&&function(t,e={}){if(e=Object.assign({},V,e),!t||"string"!=typeof t)return t;let n=t.trim();if(void 0!==e.skipLike&&e.skipLike.test(n))return t;if("0"===t)return 0;if(e.hex&&j.test(n))return function(t){if(parseInt)return parseInt(t,16);if(Number.parseInt)return Number.parseInt(t,16);if(window&&window.parseInt)return window.parseInt(t,16);throw new Error("parseInt, Number.parseInt, window.parseInt are not supported")}(n);if(-1!==n.search(/.+[eE].+/))return function(t,e,n){if(!n.eNotation)return t;const i=e.match(M);if(i){let s=i[1]||"";const r=-1===i[3].indexOf("e")?"E":"e",o=i[2],a=s?t[o.length+1]===r:t[o.length]===r;return o.length>1&&a?t:1!==o.length||!i[3].startsWith(`.${r}`)&&i[3][0]!==r?n.leadingZeros&&!a?(e=(i[1]||"")+i[3],Number(e)):t:Number(e)}return t}(t,n,e);{const s=D.exec(n);if(s){const r=s[1]||"",o=s[2];let a=(i=s[3])&&-1!==i.indexOf(".")?("."===(i=i.replace(/0+$/,""))?i="0":"."===i[0]?i="0"+i:"."===i[i.length-1]&&(i=i.substring(0,i.length-1)),i):i;const l=r?"."===t[o.length+1]:"."===t[o.length];if(!e.leadingZeros&&(o.length>1||1===o.length&&!l))return t;{const i=Number(n),s=String(i);if(0===i||-0===i)return i;if(-1!==s.search(/[eE]/))return e.eNotation?i:t;if(-1!==n.indexOf("."))return"0"===s||s===a||s===`${r}${a}`?i:t;let l=o?a:n;return o?l===s||r+l===s?i:t:l===s||l===r+s?i:t}}return t}var i}(t,n)}return void 0!==t?t:""}const K=T.getMetaDataSymbol();function Q(t,e){return tt(t,e)}function tt(t,e,n){let i;const s={};for(let r=0;r<t.length;r++){const o=t[r],a=et(o);let l="";if(l=void 0===n?a:n+"."+a,a===e.textNodeName)void 0===i?i=o[a]:i+=""+o[a];else{if(void 0===a)continue;if(o[a]){let t=tt(o[a],e,l);const n=it(t,e);void 0!==o[K]&&(t[K]=o[K]),o[":@"]?nt(t,o[":@"],l,e):1!==Object.keys(t).length||void 0===t[e.textNodeName]||e.alwaysCreateTextNode?0===Object.keys(t).length&&(e.alwaysCreateTextNode?t[e.textNodeName]="":t=""):t=t[e.textNodeName],void 0!==s[a]&&s.hasOwnProperty(a)?(Array.isArray(s[a])||(s[a]=[s[a]]),s[a].push(t)):e.isArray(a,l,n)?s[a]=[t]:s[a]=t}}}return"string"==typeof i?i.length>0&&(s[e.textNodeName]=i):void 0!==i&&(s[e.textNodeName]=i),s}function et(t){const e=Object.keys(t);for(let t=0;t<e.length;t++){const n=e[t];if(":@"!==n)return n}}function nt(t,e,n,i){if(e){const s=Object.keys(e),r=s.length;for(let o=0;o<r;o++){const r=s[o];i.isArray(r,n+"."+r,!0,!0)?t[r]=[e[r]]:t[r]=e[r]}}}function it(t,e){const{textNodeName:n}=e,i=Object.keys(t).length;return 0===i||!(1!==i||!t[n]&&"boolean"!=typeof t[n]&&0!==t[n])}class st{constructor(t){this.externalEntities={},this.options=function(t){return Object.assign({},v,t)}(t)}parse(t,e){if("string"==typeof t);else{if(!t.toString)throw new Error("XML data is accepted in String or Bytes[] form.");t=t.toString()}if(e){!0===e&&(e={});const n=a(t,e);if(!0!==n)throw Error(`${n.err.msg}:${n.err.line}:${n.err.col}`)}const n=new k(this.options);n.addExternalEntities(this.externalEntities);const i=n.parseXml(t);return this.options.preserveOrder||void 0===i?i:Q(i,this.options)}addEntity(t,e){if(-1!==e.indexOf("&"))throw new Error("Entity value can't have '&'");if(-1!==t.indexOf("&")||-1!==t.indexOf(";"))throw new Error("An entity must be set without '&' and ';'. Eg. use '#xD' for '&#xD;'");if("&"===e)throw new Error("An entity with value '&' is not permitted");this.externalEntities[t]=e}static getMetaDataSymbol(){return T.getMetaDataSymbol()}}function rt(t,e){let n="";return e.format&&e.indentBy.length>0&&(n="\n"),ot(t,e,"",n)}function ot(t,e,n,i){let s="",r=!1;for(let o=0;o<t.length;o++){const a=t[o],l=at(a);if(void 0===l)continue;let u="";if(u=0===n.length?l:`${n}.${l}`,l===e.textNodeName){let t=a[l];ut(u,e)||(t=e.tagValueProcessor(l,t),t=ht(t,e)),r&&(s+=i),s+=t,r=!1;continue}if(l===e.cdataPropName){r&&(s+=i),s+=`<![CDATA[${a[l][0][e.textNodeName]}]]>`,r=!1;continue}if(l===e.commentPropName){s+=i+`\x3c!--${a[l][0][e.textNodeName]}--\x3e`,r=!0;continue}if("?"===l[0]){const t=lt(a[":@"],e),n="?xml"===l?"":i;let o=a[l][0][e.textNodeName];o=0!==o.length?" "+o:"",s+=n+`<${l}${o}${t}?>`,r=!0;continue}let h=i;""!==h&&(h+=e.indentBy);const d=i+`<${l}${lt(a[":@"],e)}`,f=ot(a[l],e,u,h);-1!==e.unpairedTags.indexOf(l)?e.suppressUnpairedNode?s+=d+">":s+=d+"/>":f&&0!==f.length||!e.suppressEmptyNode?f&&f.endsWith(">")?s+=d+`>${f}${i}</${l}>`:(s+=d+">",f&&""!==i&&(f.includes("/>")||f.includes("</"))?s+=i+e.indentBy+f+i:s+=f,s+=`</${l}>`):s+=d+"/>",r=!0}return s}function at(t){const e=Object.keys(t);for(let n=0;n<e.length;n++){const i=e[n];if(t.hasOwnProperty(i)&&":@"!==i)return i}}function lt(t,e){let n="";if(t&&!e.ignoreAttributes)for(let i in t){if(!t.hasOwnProperty(i))continue;let s=e.attributeValueProcessor(i,t[i]);s=ht(s,e),!0===s&&e.suppressBooleanAttributes?n+=` ${i.substr(e.attributeNamePrefix.length)}`:n+=` ${i.substr(e.attributeNamePrefix.length)}="${s}"`}return n}function ut(t,e){let n=(t=t.substr(0,t.length-e.textNodeName.length-1)).substr(t.lastIndexOf(".")+1);for(let i in e.stopNodes)if(e.stopNodes[i]===t||e.stopNodes[i]==="*."+n)return!0;return!1}function ht(t,e){if(t&&t.length>0&&e.processEntities)for(let n=0;n<e.entities.length;n++){const i=e.entities[n];t=t.replace(i.regex,i.val)}return t}const dt={attributeNamePrefix:"@_",attributesGroupName:!1,textNodeName:"#text",ignoreAttributes:!0,cdataPropName:!1,format:!1,indentBy:"  ",suppressEmptyNode:!1,suppressUnpairedNode:!0,suppressBooleanAttributes:!0,tagValueProcessor:function(t,e){return e},attributeValueProcessor:function(t,e){return e},preserveOrder:!1,commentPropName:!1,unpairedTags:[],entities:[{regex:new RegExp("&","g"),val:"&amp;"},{regex:new RegExp(">","g"),val:"&gt;"},{regex:new RegExp("<","g"),val:"&lt;"},{regex:new RegExp("'","g"),val:"&apos;"},{regex:new RegExp('"',"g"),val:"&quot;"}],processEntities:!0,stopNodes:[],oneListGroup:!1};function ft(t){this.options=Object.assign({},dt,t),!0===this.options.ignoreAttributes||this.options.attributesGroupName?this.isAttribute=function(){return!1}:(this.ignoreAttributesFn=_(this.options.ignoreAttributes),this.attrPrefixLen=this.options.attributeNamePrefix.length,this.isAttribute=gt),this.processTextOrObjNode=ct,this.options.format?(this.indentate=pt,this.tagEndChar=">\n",this.newLine="\n"):(this.indentate=function(){return""},this.tagEndChar=">",this.newLine="")}function ct(t,e,n,i){const s=this.j2x(t,n+1,i.concat(e));return void 0!==t[this.options.textNodeName]&&1===Object.keys(t).length?this.buildTextValNode(t[this.options.textNodeName],e,s.attrStr,n):this.buildObjectNode(s.val,e,s.attrStr,n)}function pt(t){return this.options.indentBy.repeat(t)}function gt(t){return!(!t.startsWith(this.options.attributeNamePrefix)||t===this.options.textNodeName)&&t.substr(this.attrPrefixLen)}ft.prototype.build=function(t){return this.options.preserveOrder?rt(t,this.options):(Array.isArray(t)&&this.options.arrayNodeName&&this.options.arrayNodeName.length>1&&(t={[this.options.arrayNodeName]:t}),this.j2x(t,0,[]).val)},ft.prototype.j2x=function(t,e,n){let i="",s="";const r=n.join(".");for(let o in t)if(Object.prototype.hasOwnProperty.call(t,o))if(void 0===t[o])this.isAttribute(o)&&(s+="");else if(null===t[o])this.isAttribute(o)||o===this.options.cdataPropName?s+="":"?"===o[0]?s+=this.indentate(e)+"<"+o+"?"+this.tagEndChar:s+=this.indentate(e)+"<"+o+"/"+this.tagEndChar;else if(t[o]instanceof Date)s+=this.buildTextValNode(t[o],o,"",e);else if("object"!=typeof t[o]){const n=this.isAttribute(o);if(n&&!this.ignoreAttributesFn(n,r))i+=this.buildAttrPairStr(n,""+t[o]);else if(!n)if(o===this.options.textNodeName){let e=this.options.tagValueProcessor(o,""+t[o]);s+=this.replaceEntitiesValue(e)}else s+=this.buildTextValNode(t[o],o,"",e)}else if(Array.isArray(t[o])){const i=t[o].length;let r="",a="";for(let l=0;l<i;l++){const i=t[o][l];if(void 0===i);else if(null===i)"?"===o[0]?s+=this.indentate(e)+"<"+o+"?"+this.tagEndChar:s+=this.indentate(e)+"<"+o+"/"+this.tagEndChar;else if("object"==typeof i)if(this.options.oneListGroup){const t=this.j2x(i,e+1,n.concat(o));r+=t.val,this.options.attributesGroupName&&i.hasOwnProperty(this.options.attributesGroupName)&&(a+=t.attrStr)}else r+=this.processTextOrObjNode(i,o,e,n);else if(this.options.oneListGroup){let t=this.options.tagValueProcessor(o,i);t=this.replaceEntitiesValue(t),r+=t}else r+=this.buildTextValNode(i,o,"",e)}this.options.oneListGroup&&(r=this.buildObjectNode(r,o,a,e)),s+=r}else if(this.options.attributesGroupName&&o===this.options.attributesGroupName){const e=Object.keys(t[o]),n=e.length;for(let s=0;s<n;s++)i+=this.buildAttrPairStr(e[s],""+t[o][e[s]])}else s+=this.processTextOrObjNode(t[o],o,e,n);return{attrStr:i,val:s}},ft.prototype.buildAttrPairStr=function(t,e){return e=this.options.attributeValueProcessor(t,""+e),e=this.replaceEntitiesValue(e),this.options.suppressBooleanAttributes&&"true"===e?" "+t:" "+t+'="'+e+'"'},ft.prototype.buildObjectNode=function(t,e,n,i){if(""===t)return"?"===e[0]?this.indentate(i)+"<"+e+n+"?"+this.tagEndChar:this.indentate(i)+"<"+e+n+this.closeTag(e)+this.tagEndChar;{let s="</"+e+this.tagEndChar,r="";return"?"===e[0]&&(r="?",s=""),!n&&""!==n||-1!==t.indexOf("<")?!1!==this.options.commentPropName&&e===this.options.commentPropName&&0===r.length?this.indentate(i)+`\x3c!--${t}--\x3e`+this.newLine:this.indentate(i)+"<"+e+n+r+this.tagEndChar+t+this.indentate(i)+s:this.indentate(i)+"<"+e+n+r+">"+t+s}},ft.prototype.closeTag=function(t){let e="";return-1!==this.options.unpairedTags.indexOf(t)?this.options.suppressUnpairedNode||(e="/"):e=this.options.suppressEmptyNode?"/":`></${t}`,e},ft.prototype.buildTextValNode=function(t,e,n,i){if(!1!==this.options.cdataPropName&&e===this.options.cdataPropName)return this.indentate(i)+`<![CDATA[${t}]]>`+this.newLine;if(!1!==this.options.commentPropName&&e===this.options.commentPropName)return this.indentate(i)+`\x3c!--${t}--\x3e`+this.newLine;if("?"===e[0])return this.indentate(i)+"<"+e+n+"?"+this.tagEndChar;{let s=this.options.tagValueProcessor(e,t);return s=this.replaceEntitiesValue(s),""===s?this.indentate(i)+"<"+e+n+this.closeTag(e)+this.tagEndChar:this.indentate(i)+"<"+e+n+">"+s+"</"+e+this.tagEndChar}},ft.prototype.replaceEntitiesValue=function(t){if(t&&t.length>0&&this.options.processEntities)for(let e=0;e<this.options.entities.length;e++){const n=this.options.entities[e];t=t.replace(n.regex,n.val)}return t};const mt={validate:a};module.exports=e})();
+(()=>{"use strict";var t={d:(e,n)=>{for(var i in n)t.o(n,i)&&!t.o(e,i)&&Object.defineProperty(e,i,{enumerable:!0,get:n[i]})},o:(t,e)=>Object.prototype.hasOwnProperty.call(t,e),r:t=>{"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(t,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(t,"__esModule",{value:!0})}},e={};t.r(e),t.d(e,{XMLBuilder:()=>Xt,XMLParser:()=>Tt,XMLValidator:()=>Yt});const n=":A-Za-z_\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD",i=new RegExp("^["+n+"]["+n+"\\-.\\d\\u00B7\\u0300-\\u036F\\u203F-\\u2040]*$");function s(t,e){const n=[];let i=e.exec(t);for(;i;){const s=[];s.startIndex=e.lastIndex-i[0].length;const r=i.length;for(let t=0;t<r;t++)s.push(i[t]);n.push(s),i=e.exec(t)}return n}const r=function(t){return!(null==i.exec(t))},o=["hasOwnProperty","toString","valueOf","__defineGetter__","__defineSetter__","__lookupGetter__","__lookupSetter__"],a=["__proto__","constructor","prototype"],h={allowBooleanAttributes:!1,unpairedTags:[]};function l(t,e){e=Object.assign({},h,e);const n=[];let i=!1,s=!1;"\ufeff"===t[0]&&(t=t.substr(1));for(let r=0;r<t.length;r++)if("<"===t[r]&&"?"===t[r+1]){if(r+=2,r=p(t,r),r.err)return r}else{if("<"!==t[r]){if(u(t[r]))continue;return b("InvalidChar","char '"+t[r]+"' is not expected.",w(t,r))}{let o=r;if(r++,"!"===t[r]){r=c(t,r);continue}{let a=!1;"/"===t[r]&&(a=!0,r++);let h="";for(;r<t.length&&">"!==t[r]&&" "!==t[r]&&"\t"!==t[r]&&"\n"!==t[r]&&"\r"!==t[r];r++)h+=t[r];if(h=h.trim(),"/"===h[h.length-1]&&(h=h.substring(0,h.length-1),r--),!E(h)){let e;return e=0===h.trim().length?"Invalid space after '<'.":"Tag '"+h+"' is an invalid name.",b("InvalidTag",e,w(t,r))}const l=g(t,r);if(!1===l)return b("InvalidAttr","Attributes for '"+h+"' have open quote.",w(t,r));let d=l.value;if(r=l.index,"/"===d[d.length-1]){const n=r-d.length;d=d.substring(0,d.length-1);const s=x(d,e);if(!0!==s)return b(s.err.code,s.err.msg,w(t,n+s.err.line));i=!0}else if(a){if(!l.tagClosed)return b("InvalidTag","Closing tag '"+h+"' doesn't have proper closing.",w(t,r));if(d.trim().length>0)return b("InvalidTag","Closing tag '"+h+"' can't have attributes or invalid starting.",w(t,o));if(0===n.length)return b("InvalidTag","Closing tag '"+h+"' has not been opened.",w(t,o));{const e=n.pop();if(h!==e.tagName){let n=w(t,e.tagStartPos);return b("InvalidTag","Expected closing tag '"+e.tagName+"' (opened in line "+n.line+", col "+n.col+") instead of closing tag '"+h+"'.",w(t,o))}0==n.length&&(s=!0)}}else{const a=x(d,e);if(!0!==a)return b(a.err.code,a.err.msg,w(t,r-d.length+a.err.line));if(!0===s)return b("InvalidXml","Multiple possible root nodes found.",w(t,r));-1!==e.unpairedTags.indexOf(h)||n.push({tagName:h,tagStartPos:o}),i=!0}for(r++;r<t.length;r++)if("<"===t[r]){if("!"===t[r+1]){r++,r=c(t,r);continue}if("?"!==t[r+1])break;if(r=p(t,++r),r.err)return r}else if("&"===t[r]){const e=N(t,r);if(-1==e)return b("InvalidChar","char '&' is not expected.",w(t,r));r=e}else if(!0===s&&!u(t[r]))return b("InvalidXml","Extra text at the end",w(t,r));"<"===t[r]&&r--}}}return i?1==n.length?b("InvalidTag","Unclosed tag '"+n[0].tagName+"'.",w(t,n[0].tagStartPos)):!(n.length>0)||b("InvalidXml","Invalid '"+JSON.stringify(n.map(t=>t.tagName),null,4).replace(/\r?\n/g,"")+"' found.",{line:1,col:1}):b("InvalidXml","Start tag expected.",1)}function u(t){return" "===t||"\t"===t||"\n"===t||"\r"===t}function p(t,e){const n=e;for(;e<t.length;e++)if("?"==t[e]||" "==t[e]){const i=t.substr(n,e-n);if(e>5&&"xml"===i)return b("InvalidXml","XML declaration allowed only at the start of the document.",w(t,e));if("?"==t[e]&&">"==t[e+1]){e++;break}continue}return e}function c(t,e){if(t.length>e+5&&"-"===t[e+1]&&"-"===t[e+2]){for(e+=3;e<t.length;e++)if("-"===t[e]&&"-"===t[e+1]&&">"===t[e+2]){e+=2;break}}else if(t.length>e+8&&"D"===t[e+1]&&"O"===t[e+2]&&"C"===t[e+3]&&"T"===t[e+4]&&"Y"===t[e+5]&&"P"===t[e+6]&&"E"===t[e+7]){let n=1;for(e+=8;e<t.length;e++)if("<"===t[e])n++;else if(">"===t[e]&&(n--,0===n))break}else if(t.length>e+9&&"["===t[e+1]&&"C"===t[e+2]&&"D"===t[e+3]&&"A"===t[e+4]&&"T"===t[e+5]&&"A"===t[e+6]&&"["===t[e+7])for(e+=8;e<t.length;e++)if("]"===t[e]&&"]"===t[e+1]&&">"===t[e+2]){e+=2;break}return e}const d='"',f="'";function g(t,e){let n="",i="",s=!1;for(;e<t.length;e++){if(t[e]===d||t[e]===f)""===i?i=t[e]:i!==t[e]||(i="");else if(">"===t[e]&&""===i){s=!0;break}n+=t[e]}return""===i&&{value:n,index:e,tagClosed:s}}const m=new RegExp("(\\s*)([^\\s=]+)(\\s*=)?(\\s*(['\"])(([\\s\\S])*?)\\5)?","g");function x(t,e){const n=s(t,m),i={};for(let t=0;t<n.length;t++){if(0===n[t][1].length)return b("InvalidAttr","Attribute '"+n[t][2]+"' has no space in starting.",v(n[t]));if(void 0!==n[t][3]&&void 0===n[t][4])return b("InvalidAttr","Attribute '"+n[t][2]+"' is without value.",v(n[t]));if(void 0===n[t][3]&&!e.allowBooleanAttributes)return b("InvalidAttr","boolean attribute '"+n[t][2]+"' is not allowed.",v(n[t]));const s=n[t][2];if(!y(s))return b("InvalidAttr","Attribute '"+s+"' is an invalid name.",v(n[t]));if(Object.prototype.hasOwnProperty.call(i,s))return b("InvalidAttr","Attribute '"+s+"' is repeated.",v(n[t]));i[s]=1}return!0}function N(t,e){if(";"===t[++e])return-1;if("#"===t[e])return function(t,e){let n=/\d/;for("x"===t[e]&&(e++,n=/[\da-fA-F]/);e<t.length;e++){if(";"===t[e])return e;if(!t[e].match(n))break}return-1}(t,++e);let n=0;for(;e<t.length;e++,n++)if(!(t[e].match(/\w/)&&n<20)){if(";"===t[e])break;return-1}return e}function b(t,e,n){return{err:{code:t,msg:e,line:n.line||n,col:n.col}}}function y(t){return r(t)}function E(t){return r(t)}function w(t,e){const n=t.substring(0,e).split(/\r?\n/);return{line:n.length,col:n[n.length-1].length+1}}function v(t){return t.startIndex+t[1].length}const S=t=>o.includes(t)?"__"+t:t,_={preserveOrder:!1,attributeNamePrefix:"@_",attributesGroupName:!1,textNodeName:"#text",ignoreAttributes:!0,removeNSPrefix:!1,allowBooleanAttributes:!1,parseTagValue:!0,parseAttributeValue:!1,trimValues:!0,cdataPropName:!1,numberParseOptions:{hex:!0,leadingZeros:!0,eNotation:!0},tagValueProcessor:function(t,e){return e},attributeValueProcessor:function(t,e){return e},stopNodes:[],alwaysCreateTextNode:!1,isArray:()=>!1,commentPropName:!1,unpairedTags:[],processEntities:!0,htmlEntities:!1,entityDecoder:null,ignoreDeclaration:!1,ignorePiTags:!1,transformTagName:!1,transformAttributeName:!1,updateTag:function(t,e,n){return t},captureMetaData:!1,maxNestedTags:100,strictReservedNames:!0,jPath:!0,onDangerousProperty:S};function A(t,e){if("string"!=typeof t)return;const n=t.toLowerCase();if(o.some(t=>n===t.toLowerCase()))throw new Error(`[SECURITY] Invalid ${e}: "${t}" is a reserved JavaScript keyword that could cause prototype pollution`);if(a.some(t=>n===t.toLowerCase()))throw new Error(`[SECURITY] Invalid ${e}: "${t}" is a reserved JavaScript keyword that could cause prototype pollution`)}function T(t,e){return"boolean"==typeof t?{enabled:t,maxEntitySize:1e4,maxExpansionDepth:1e4,maxTotalExpansions:1/0,maxExpandedLength:1e5,maxEntityCount:1e3,allowedTags:null,tagFilter:null,appliesTo:"all"}:"object"==typeof t&&null!==t?{enabled:!1!==t.enabled,maxEntitySize:Math.max(1,t.maxEntitySize??1e4),maxExpansionDepth:Math.max(1,t.maxExpansionDepth??1e4),maxTotalExpansions:Math.max(1,t.maxTotalExpansions??1/0),maxExpandedLength:Math.max(1,t.maxExpandedLength??1e5),maxEntityCount:Math.max(1,t.maxEntityCount??1e3),allowedTags:t.allowedTags??null,tagFilter:t.tagFilter??null,appliesTo:t.appliesTo??"all"}:T(!0)}const C=function(t){const e=Object.assign({},_,t),n=[{value:e.attributeNamePrefix,name:"attributeNamePrefix"},{value:e.attributesGroupName,name:"attributesGroupName"},{value:e.textNodeName,name:"textNodeName"},{value:e.cdataPropName,name:"cdataPropName"},{value:e.commentPropName,name:"commentPropName"}];for(const{value:t,name:e}of n)t&&A(t,e);return null===e.onDangerousProperty&&(e.onDangerousProperty=S),e.processEntities=T(e.processEntities,e.htmlEntities),e.unpairedTagsSet=new Set(e.unpairedTags),e.stopNodes&&Array.isArray(e.stopNodes)&&(e.stopNodes=e.stopNodes.map(t=>"string"==typeof t&&t.startsWith("*.")?".."+t.substring(2):t)),e};let P;P="function"!=typeof Symbol?"@@xmlMetadata":Symbol("XML Node Metadata");class O{constructor(t){this.tagname=t,this.child=[],this[":@"]=Object.create(null)}add(t,e){"__proto__"===t&&(t="#__proto__"),this.child.push({[t]:e})}addChild(t,e){"__proto__"===t.tagname&&(t.tagname="#__proto__"),t[":@"]&&Object.keys(t[":@"]).length>0?this.child.push({[t.tagname]:t.child,":@":t[":@"]}):this.child.push({[t.tagname]:t.child}),void 0!==e&&(this.child[this.child.length-1][P]={startIndex:e})}static getMetaDataSymbol(){return P}}class ${constructor(t){this.suppressValidationErr=!t,this.options=t}readDocType(t,e){const n=Object.create(null);let i=0;if("O"!==t[e+3]||"C"!==t[e+4]||"T"!==t[e+5]||"Y"!==t[e+6]||"P"!==t[e+7]||"E"!==t[e+8])throw new Error("Invalid Tag instead of DOCTYPE");{e+=9;let s=1,r=!1,o=!1,a="";for(;e<t.length;e++)if("<"!==t[e]||o)if(">"===t[e]){if(o?"-"===t[e-1]&&"-"===t[e-2]&&(o=!1,s--):s--,0===s)break}else"["===t[e]?r=!0:a+=t[e];else{if(r&&D(t,"!ENTITY",e)){let s,r;if(e+=7,[s,r,e]=this.readEntityExp(t,e+1,this.suppressValidationErr),-1===r.indexOf("&")){if(!1!==this.options.enabled&&null!=this.options.maxEntityCount&&i>=this.options.maxEntityCount)throw new Error(`Entity count (${i+1}) exceeds maximum allowed (${this.options.maxEntityCount})`);n[s]=r,i++}}else if(r&&D(t,"!ELEMENT",e)){e+=8;const{index:n}=this.readElementExp(t,e+1);e=n}else if(r&&D(t,"!ATTLIST",e))e+=8;else if(r&&D(t,"!NOTATION",e)){e+=9;const{index:n}=this.readNotationExp(t,e+1,this.suppressValidationErr);e=n}else{if(!D(t,"!--",e))throw new Error("Invalid DOCTYPE");o=!0}s++,a=""}if(0!==s)throw new Error("Unclosed DOCTYPE")}return{entities:n,i:e}}readEntityExp(t,e){const n=e=I(t,e);for(;e<t.length&&!/\s/.test(t[e])&&'"'!==t[e]&&"'"!==t[e];)e++;let i=t.substring(n,e);if(M(i),e=I(t,e),!this.suppressValidationErr){if("SYSTEM"===t.substring(e,e+6).toUpperCase())throw new Error("External entities are not supported");if("%"===t[e])throw new Error("Parameter entities are not supported")}let s="";if([e,s]=this.readIdentifierVal(t,e,"entity"),!1!==this.options.enabled&&null!=this.options.maxEntitySize&&s.length>this.options.maxEntitySize)throw new Error(`Entity "${i}" size (${s.length}) exceeds maximum allowed size (${this.options.maxEntitySize})`);return[i,s,--e]}readNotationExp(t,e){const n=e=I(t,e);for(;e<t.length&&!/\s/.test(t[e]);)e++;let i=t.substring(n,e);!this.suppressValidationErr&&M(i),e=I(t,e);const s=t.substring(e,e+6).toUpperCase();if(!this.suppressValidationErr&&"SYSTEM"!==s&&"PUBLIC"!==s)throw new Error(`Expected SYSTEM or PUBLIC, found "${s}"`);e+=s.length,e=I(t,e);let r=null,o=null;if("PUBLIC"===s)[e,r]=this.readIdentifierVal(t,e,"publicIdentifier"),'"'!==t[e=I(t,e)]&&"'"!==t[e]||([e,o]=this.readIdentifierVal(t,e,"systemIdentifier"));else if("SYSTEM"===s&&([e,o]=this.readIdentifierVal(t,e,"systemIdentifier"),!this.suppressValidationErr&&!o))throw new Error("Missing mandatory system identifier for SYSTEM notation");return{notationName:i,publicIdentifier:r,systemIdentifier:o,index:--e}}readIdentifierVal(t,e,n){let i="";const s=t[e];if('"'!==s&&"'"!==s)throw new Error(`Expected quoted string, found "${s}"`);const r=++e;for(;e<t.length&&t[e]!==s;)e++;if(i=t.substring(r,e),t[e]!==s)throw new Error(`Unterminated ${n} value`);return[++e,i]}readElementExp(t,e){const n=e=I(t,e);for(;e<t.length&&!/\s/.test(t[e]);)e++;let i=t.substring(n,e);if(!this.suppressValidationErr&&!r(i))throw new Error(`Invalid element name: "${i}"`);let s="";if("E"===t[e=I(t,e)]&&D(t,"MPTY",e))e+=4;else if("A"===t[e]&&D(t,"NY",e))e+=2;else if("("===t[e]){const n=++e;for(;e<t.length&&")"!==t[e];)e++;if(s=t.substring(n,e),")"!==t[e])throw new Error("Unterminated content model")}else if(!this.suppressValidationErr)throw new Error(`Invalid Element Expression, found "${t[e]}"`);return{elementName:i,contentModel:s.trim(),index:e}}readAttlistExp(t,e){let n=e=I(t,e);for(;e<t.length&&!/\s/.test(t[e]);)e++;let i=t.substring(n,e);for(M(i),n=e=I(t,e);e<t.length&&!/\s/.test(t[e]);)e++;let s=t.substring(n,e);if(!M(s))throw new Error(`Invalid attribute name: "${s}"`);e=I(t,e);let r="";if("NOTATION"===t.substring(e,e+8).toUpperCase()){if(r="NOTATION","("!==t[e=I(t,e+=8)])throw new Error(`Expected '(', found "${t[e]}"`);e++;let n=[];for(;e<t.length&&")"!==t[e];){const i=e;for(;e<t.length&&"|"!==t[e]&&")"!==t[e];)e++;let s=t.substring(i,e);if(s=s.trim(),!M(s))throw new Error(`Invalid notation name: "${s}"`);n.push(s),"|"===t[e]&&(e++,e=I(t,e))}if(")"!==t[e])throw new Error("Unterminated list of notations");e++,r+=" ("+n.join("|")+")"}else{const n=e;for(;e<t.length&&!/\s/.test(t[e]);)e++;r+=t.substring(n,e);const i=["CDATA","ID","IDREF","IDREFS","ENTITY","ENTITIES","NMTOKEN","NMTOKENS"];if(!this.suppressValidationErr&&!i.includes(r.toUpperCase()))throw new Error(`Invalid attribute type: "${r}"`)}e=I(t,e);let o="";return"#REQUIRED"===t.substring(e,e+8).toUpperCase()?(o="#REQUIRED",e+=8):"#IMPLIED"===t.substring(e,e+7).toUpperCase()?(o="#IMPLIED",e+=7):[e,o]=this.readIdentifierVal(t,e,"ATTLIST"),{elementName:i,attributeName:s,attributeType:r,defaultValue:o,index:e}}}const I=(t,e)=>{for(;e<t.length&&/\s/.test(t[e]);)e++;return e};function D(t,e,n){for(let i=0;i<e.length;i++)if(e[i]!==t[n+i+1])return!1;return!0}function M(t){if(r(t))return t;throw new Error(`Invalid entity name ${t}`)}const j=/^[-+]?0x[a-fA-F0-9]+$/,V=/^([\-\+])?(0*)([0-9]*(\.[0-9]*)?)$/,L={hex:!0,leadingZeros:!0,decimalPoint:".",eNotation:!0,infinity:"original"};const k=/^([-+])?(0*)(\d*(\.\d*)?[eE][-\+]?\d+)$/;class F{constructor(t){this._matcher=t}get separator(){return this._matcher.separator}getCurrentTag(){const t=this._matcher.path;return t.length>0?t[t.length-1].tag:void 0}getCurrentNamespace(){const t=this._matcher.path;return t.length>0?t[t.length-1].namespace:void 0}getAttrValue(t){const e=this._matcher.path;if(0!==e.length)return e[e.length-1].values?.[t]}hasAttr(t){const e=this._matcher.path;if(0===e.length)return!1;const n=e[e.length-1];return void 0!==n.values&&t in n.values}getPosition(){const t=this._matcher.path;return 0===t.length?-1:t[t.length-1].position??0}getCounter(){const t=this._matcher.path;return 0===t.length?-1:t[t.length-1].counter??0}getIndex(){return this.getPosition()}getDepth(){return this._matcher.path.length}toString(t,e=!0){return this._matcher.toString(t,e)}toArray(){return this._matcher.path.map(t=>t.tag)}matches(t){return this._matcher.matches(t)}matchesAny(t){return t.matchesAny(this._matcher)}}class R{constructor(t={}){this.separator=t.separator||".",this.path=[],this.siblingStacks=[],this._pathStringCache=null,this._view=new F(this)}push(t,e=null,n=null){this._pathStringCache=null,this.path.length>0&&(this.path[this.path.length-1].values=void 0);const i=this.path.length;this.siblingStacks[i]||(this.siblingStacks[i]=new Map);const s=this.siblingStacks[i],r=n?`${n}:${t}`:t,o=s.get(r)||0;let a=0;for(const t of s.values())a+=t;s.set(r,o+1);const h={tag:t,position:a,counter:o};null!=n&&(h.namespace=n),null!=e&&(h.values=e),this.path.push(h)}pop(){if(0===this.path.length)return;this._pathStringCache=null;const t=this.path.pop();return this.siblingStacks.length>this.path.length+1&&(this.siblingStacks.length=this.path.length+1),t}updateCurrent(t){if(this.path.length>0){const e=this.path[this.path.length-1];null!=t&&(e.values=t)}}getCurrentTag(){return this.path.length>0?this.path[this.path.length-1].tag:void 0}getCurrentNamespace(){return this.path.length>0?this.path[this.path.length-1].namespace:void 0}getAttrValue(t){if(0!==this.path.length)return this.path[this.path.length-1].values?.[t]}hasAttr(t){if(0===this.path.length)return!1;const e=this.path[this.path.length-1];return void 0!==e.values&&t in e.values}getPosition(){return 0===this.path.length?-1:this.path[this.path.length-1].position??0}getCounter(){return 0===this.path.length?-1:this.path[this.path.length-1].counter??0}getIndex(){return this.getPosition()}getDepth(){return this.path.length}toString(t,e=!0){const n=t||this.separator;if(n===this.separator&&!0===e){if(null!==this._pathStringCache)return this._pathStringCache;const t=this.path.map(t=>t.namespace?`${t.namespace}:${t.tag}`:t.tag).join(n);return this._pathStringCache=t,t}return this.path.map(t=>e&&t.namespace?`${t.namespace}:${t.tag}`:t.tag).join(n)}toArray(){return this.path.map(t=>t.tag)}reset(){this._pathStringCache=null,this.path=[],this.siblingStacks=[]}matches(t){const e=t.segments;return 0!==e.length&&(t.hasDeepWildcard()?this._matchWithDeepWildcard(e):this._matchSimple(e))}_matchSimple(t){if(this.path.length!==t.length)return!1;for(let e=0;e<t.length;e++)if(!this._matchSegment(t[e],this.path[e],e===this.path.length-1))return!1;return!0}_matchWithDeepWildcard(t){let e=this.path.length-1,n=t.length-1;for(;n>=0&&e>=0;){const i=t[n];if("deep-wildcard"===i.type){if(n--,n<0)return!0;const i=t[n];let s=!1;for(let t=e;t>=0;t--)if(this._matchSegment(i,this.path[t],t===this.path.length-1)){e=t-1,n--,s=!0;break}if(!s)return!1}else{if(!this._matchSegment(i,this.path[e],e===this.path.length-1))return!1;e--,n--}}return n<0}_matchSegment(t,e,n){if("*"!==t.tag&&t.tag!==e.tag)return!1;if(void 0!==t.namespace&&"*"!==t.namespace&&t.namespace!==e.namespace)return!1;if(void 0!==t.attrName){if(!n)return!1;if(!e.values||!(t.attrName in e.values))return!1;if(void 0!==t.attrValue&&String(e.values[t.attrName])!==String(t.attrValue))return!1}if(void 0!==t.position){if(!n)return!1;const i=e.counter??0;if("first"===t.position&&0!==i)return!1;if("odd"===t.position&&i%2!=1)return!1;if("even"===t.position&&i%2!=0)return!1;if("nth"===t.position&&i!==t.positionValue)return!1}return!0}matchesAny(t){return t.matchesAny(this)}snapshot(){return{path:this.path.map(t=>({...t})),siblingStacks:this.siblingStacks.map(t=>new Map(t))}}restore(t){this._pathStringCache=null,this.path=t.path.map(t=>({...t})),this.siblingStacks=t.siblingStacks.map(t=>new Map(t))}readOnly(){return this._view}}class G{constructor(t,e={},n){this.pattern=t,this.separator=e.separator||".",this.segments=this._parse(t),this.data=n,this._hasDeepWildcard=this.segments.some(t=>"deep-wildcard"===t.type),this._hasAttributeCondition=this.segments.some(t=>void 0!==t.attrName),this._hasPositionSelector=this.segments.some(t=>void 0!==t.position)}_parse(t){const e=[];let n=0,i="";for(;n<t.length;)t[n]===this.separator?n+1<t.length&&t[n+1]===this.separator?(i.trim()&&(e.push(this._parseSegment(i.trim())),i=""),e.push({type:"deep-wildcard"}),n+=2):(i.trim()&&e.push(this._parseSegment(i.trim())),i="",n++):(i+=t[n],n++);return i.trim()&&e.push(this._parseSegment(i.trim())),e}_parseSegment(t){const e={type:"tag"};let n=null,i=t;const s=t.match(/^([^\[]+)(\[[^\]]*\])(.*)$/);if(s&&(i=s[1]+s[3],s[2])){const t=s[2].slice(1,-1);t&&(n=t)}let r,o,a=i;if(i.includes("::")){const e=i.indexOf("::");if(r=i.substring(0,e).trim(),a=i.substring(e+2).trim(),!r)throw new Error(`Invalid namespace in pattern: ${t}`)}let h=null;if(a.includes(":")){const t=a.lastIndexOf(":"),e=a.substring(0,t).trim(),n=a.substring(t+1).trim();["first","last","odd","even"].includes(n)||/^nth\(\d+\)$/.test(n)?(o=e,h=n):o=a}else o=a;if(!o)throw new Error(`Invalid segment pattern: ${t}`);if(e.tag=o,r&&(e.namespace=r),n)if(n.includes("=")){const t=n.indexOf("=");e.attrName=n.substring(0,t).trim(),e.attrValue=n.substring(t+1).trim()}else e.attrName=n.trim();if(h){const t=h.match(/^nth\((\d+)\)$/);t?(e.position="nth",e.positionValue=parseInt(t[1],10)):e.position=h}return e}get length(){return this.segments.length}hasDeepWildcard(){return this._hasDeepWildcard}hasAttributeCondition(){return this._hasAttributeCondition}hasPositionSelector(){return this._hasPositionSelector}toString(){return this.pattern}}class B{constructor(){this._byDepthAndTag=new Map,this._wildcardByDepth=new Map,this._deepWildcards=[],this._patterns=new Set,this._sealed=!1}add(t){if(this._sealed)throw new TypeError("ExpressionSet is sealed. Create a new ExpressionSet to add more expressions.");if(this._patterns.has(t.pattern))return this;if(this._patterns.add(t.pattern),t.hasDeepWildcard())return this._deepWildcards.push(t),this;const e=t.length,n=t.segments[t.segments.length-1],i=n?.tag;if(i&&"*"!==i){const n=`${e}:${i}`;this._byDepthAndTag.has(n)||this._byDepthAndTag.set(n,[]),this._byDepthAndTag.get(n).push(t)}else this._wildcardByDepth.has(e)||this._wildcardByDepth.set(e,[]),this._wildcardByDepth.get(e).push(t);return this}addAll(t){for(const e of t)this.add(e);return this}has(t){return this._patterns.has(t.pattern)}get size(){return this._patterns.size}seal(){return this._sealed=!0,this}get isSealed(){return this._sealed}matchesAny(t){return null!==this.findMatch(t)}findMatch(t){const e=t.getDepth(),n=`${e}:${t.getCurrentTag()}`,i=this._byDepthAndTag.get(n);if(i)for(let e=0;e<i.length;e++)if(t.matches(i[e]))return i[e];const s=this._wildcardByDepth.get(e);if(s)for(let e=0;e<s.length;e++)if(t.matches(s[e]))return s[e];for(let e=0;e<this._deepWildcards.length;e++)if(t.matches(this._deepWildcards[e]))return this._deepWildcards[e];return null}}const U={cent:"¢",pound:"£",curren:"¤",yen:"¥",euro:"€",dollar:"$",euro:"€",fnof:"ƒ",inr:"₹",af:"؋",birr:"ብር",peso:"₱",rub:"₽",won:"₩",yuan:"¥",cedil:"¸"},W={amp:"&",apos:"'",gt:">",lt:"<",quot:'"'},X={nbsp:" ",copy:"©",reg:"®",trade:"™",mdash:"—",ndash:"–",hellip:"…",laquo:"«",raquo:"»",lsquo:"‘",rsquo:"’",ldquo:"“",rdquo:"”",bull:"•",para:"¶",sect:"§",deg:"°",frac12:"½",frac14:"¼",frac34:"¾"},Y=new Set("!?\\\\/[]$%{}^&*()<>|+");function z(t){if("#"===t[0])throw new Error(`[EntityReplacer] Invalid character '#' in entity name: "${t}"`);for(const e of t)if(Y.has(e))throw new Error(`[EntityReplacer] Invalid character '${e}' in entity name: "${t}"`);return t}function q(...t){const e=Object.create(null);for(const n of t)if(n)for(const t of Object.keys(n)){const i=n[t];if("string"==typeof i)e[t]=i;else if(i&&"object"==typeof i&&void 0!==i.val){const n=i.val;"string"==typeof n&&(e[t]=n)}}return e}const Z="external",J="base",K="all",Q=Object.freeze({allow:0,leave:1,remove:2,throw:3}),H=new Set([9,10,13]);class tt{constructor(t={}){var e;this._limit=t.limit||{},this._maxTotalExpansions=this._limit.maxTotalExpansions||0,this._maxExpandedLength=this._limit.maxExpandedLength||0,this._postCheck="function"==typeof t.postCheck?t.postCheck:t=>t,this._limitTiers=(e=this._limit.applyLimitsTo??Z)&&e!==Z?e===K?new Set([K]):e===J?new Set([J]):Array.isArray(e)?new Set(e):new Set([Z]):new Set([Z]),this._numericAllowed=t.numericAllowed??!0,this._baseMap=q(W,t.namedEntities||null),this._externalMap=Object.create(null),this._inputMap=Object.create(null),this._totalExpansions=0,this._expandedLength=0,this._removeSet=new Set(t.remove&&Array.isArray(t.remove)?t.remove:[]),this._leaveSet=new Set(t.leave&&Array.isArray(t.leave)?t.leave:[]);const n=function(t){if(!t)return{xmlVersion:1,onLevel:Q.allow,nullLevel:Q.remove};const e=1.1===t.xmlVersion?1.1:1,n=Q[t.onNCR]??Q.allow,i=Q[t.nullNCR]??Q.remove;return{xmlVersion:e,onLevel:n,nullLevel:Math.max(i,Q.remove)}}(t.ncr);this._ncrXmlVersion=n.xmlVersion,this._ncrOnLevel=n.onLevel,this._ncrNullLevel=n.nullLevel}setExternalEntities(t){if(t)for(const e of Object.keys(t))z(e);this._externalMap=q(t)}addExternalEntity(t,e){z(t),"string"==typeof e&&-1===e.indexOf("&")&&(this._externalMap[t]=e)}addInputEntities(t){this._totalExpansions=0,this._expandedLength=0,this._inputMap=q(t)}reset(){return this._inputMap=Object.create(null),this._totalExpansions=0,this._expandedLength=0,this}setXmlVersion(t){this._ncrXmlVersion=1.1===t?1.1:1}decode(t){if("string"!=typeof t||0===t.length)return t;const e=t,n=[],i=t.length;let s=0,r=0;const o=this._maxTotalExpansions>0,a=this._maxExpandedLength>0,h=o||a;for(;r<i;){if(38!==t.charCodeAt(r)){r++;continue}let e=r+1;for(;e<i&&59!==t.charCodeAt(e)&&e-r<=32;)e++;if(e>=i||59!==t.charCodeAt(e)){r++;continue}const l=t.slice(r+1,e);if(0===l.length){r++;continue}let u,p;if(this._removeSet.has(l))u="",void 0===p&&(p=Z);else{if(this._leaveSet.has(l)){r++;continue}if(35===l.charCodeAt(0)){const t=this._resolveNCR(l);if(void 0===t){r++;continue}u=t,p=J}else{const t=this._resolveName(l);u=t?.value,p=t?.tier}}if(void 0!==u){if(r>s&&n.push(t.slice(s,r)),n.push(u),s=e+1,r=s,h&&this._tierCounts(p)){if(o&&(this._totalExpansions++,this._totalExpansions>this._maxTotalExpansions))throw new Error(`[EntityReplacer] Entity expansion count limit exceeded: ${this._totalExpansions} > ${this._maxTotalExpansions}`);if(a){const t=u.length-(l.length+2);if(t>0&&(this._expandedLength+=t,this._expandedLength>this._maxExpandedLength))throw new Error(`[EntityReplacer] Expanded content length limit exceeded: ${this._expandedLength} > ${this._maxExpandedLength}`)}}}else r++}s<i&&n.push(t.slice(s));const l=0===n.length?t:n.join("");return this._postCheck(l,e)}_tierCounts(t){return!!this._limitTiers.has(K)||this._limitTiers.has(t)}_resolveName(t){return t in this._inputMap?{value:this._inputMap[t],tier:Z}:t in this._externalMap?{value:this._externalMap[t],tier:Z}:t in this._baseMap?{value:this._baseMap[t],tier:J}:void 0}_classifyNCR(t){return 0===t?this._ncrNullLevel:t>=55296&&t<=57343||1===this._ncrXmlVersion&&t>=1&&t<=31&&!H.has(t)?Q.remove:-1}_applyNCRAction(t,e,n){switch(t){case Q.allow:return String.fromCodePoint(n);case Q.remove:return"";case Q.leave:return;case Q.throw:throw new Error(`[EntityDecoder] Prohibited numeric character reference &${e}; (U+${n.toString(16).toUpperCase().padStart(4,"0")})`);default:return String.fromCodePoint(n)}}_resolveNCR(t){const e=t.charCodeAt(1);let n;if(n=120===e||88===e?parseInt(t.slice(2),16):parseInt(t.slice(1),10),Number.isNaN(n)||n<0||n>1114111)return;const i=this._classifyNCR(n);if(!this._numericAllowed&&i<Q.remove)return;const s=-1===i?this._ncrOnLevel:Math.max(this._ncrOnLevel,i);return this._applyNCRAction(s,t,n)}}function et(t,e){if(!t)return{};const n=e.attributesGroupName?t[e.attributesGroupName]:t;if(!n)return{};const i={};for(const t in n)t.startsWith(e.attributeNamePrefix)?i[t.substring(e.attributeNamePrefix.length)]=n[t]:i[t]=n[t];return i}function nt(t){if(!t||"string"!=typeof t)return;const e=t.indexOf(":");if(-1!==e&&e>0){const n=t.substring(0,e);if("xmlns"!==n)return n}}class it{constructor(t,e){var n;this.options=t,this.currentNode=null,this.tagsNodeStack=[],this.parseXml=ht,this.parseTextData=st,this.resolveNameSpace=rt,this.buildAttributesMap=at,this.isItStopNode=ct,this.replaceEntitiesValue=ut,this.readStopNodeData=mt,this.saveTextToParentTag=pt,this.addChild=lt,this.ignoreAttributesFn="function"==typeof(n=this.options.ignoreAttributes)?n:Array.isArray(n)?t=>{for(const e of n){if("string"==typeof e&&t===e)return!0;if(e instanceof RegExp&&e.test(t))return!0}}:()=>!1,this.entityExpansionCount=0,this.currentExpandedLength=0;let i={...W};this.options.entityDecoder?this.entityDecoder=this.options.entityDecoder:("object"==typeof this.options.htmlEntities?i=this.options.htmlEntities:!0===this.options.htmlEntities&&(i={...X,...U}),this.entityDecoder=new tt({namedEntities:{...i,...e},numericAllowed:this.options.htmlEntities,limit:{maxTotalExpansions:this.options.processEntities.maxTotalExpansions,maxExpandedLength:this.options.processEntities.maxExpandedLength,applyLimitsTo:this.options.processEntities.appliesTo}})),this.matcher=new R,this.readonlyMatcher=this.matcher.readOnly(),this.isCurrentNodeStopNode=!1,this.stopNodeExpressionsSet=new B;const s=this.options.stopNodes;if(s&&s.length>0){for(let t=0;t<s.length;t++){const e=s[t];"string"==typeof e?this.stopNodeExpressionsSet.add(new G(e)):e instanceof G&&this.stopNodeExpressionsSet.add(e)}this.stopNodeExpressionsSet.seal()}}}function st(t,e,n,i,s,r,o){const a=this.options;if(void 0!==t&&(a.trimValues&&!i&&(t=t.trim()),t.length>0)){o||(t=this.replaceEntitiesValue(t,e,n));const i=a.jPath?n.toString():n,h=a.tagValueProcessor(e,t,i,s,r);return null==h?t:typeof h!=typeof t||h!==t?h:a.trimValues||t.trim()===t?xt(t,a.parseTagValue,a.numberParseOptions):t}}function rt(t){if(this.options.removeNSPrefix){const e=t.split(":"),n="/"===t.charAt(0)?"/":"";if("xmlns"===e[0])return"";2===e.length&&(t=n+e[1])}return t}const ot=new RegExp("([^\\s=]+)\\s*(=\\s*(['\"])([\\s\\S]*?)\\3)?","gm");function at(t,e,n,i=!1){const r=this.options;if(!0===i||!0!==r.ignoreAttributes&&"string"==typeof t){const i=s(t,ot),o=i.length,a={},h=new Array(o);let l=!1;const u={};for(let t=0;t<o;t++){const e=this.resolveNameSpace(i[t][1]),s=i[t][4];if(e.length&&void 0!==s){let i=s;r.trimValues&&(i=i.trim()),i=this.replaceEntitiesValue(i,n,this.readonlyMatcher),h[t]=i,u[e]=i,l=!0}}l&&"object"==typeof e&&e.updateCurrent&&e.updateCurrent(u);const p=r.jPath?e.toString():this.readonlyMatcher;let c=!1;for(let t=0;t<o;t++){const e=this.resolveNameSpace(i[t][1]);if(this.ignoreAttributesFn(e,p))continue;let n=r.attributeNamePrefix+e;if(e.length)if(r.transformAttributeName&&(n=r.transformAttributeName(n)),n=bt(n,r),void 0!==i[t][4]){const i=h[t],s=r.attributeValueProcessor(e,i,p);a[n]=null==s?i:typeof s!=typeof i||s!==i?s:xt(i,r.parseAttributeValue,r.numberParseOptions),c=!0}else r.allowBooleanAttributes&&(a[n]=!0,c=!0)}if(!c)return;if(r.attributesGroupName&&!r.preserveOrder){const t={};return t[r.attributesGroupName]=a,t}return a}}const ht=function(t){t=t.replace(/\r\n?/g,"\n");const e=new O("!xml");let n=e,i="";this.matcher.reset(),this.entityDecoder.reset(),this.entityExpansionCount=0,this.currentExpandedLength=0;const s=this.options,r=new $(s.processEntities),o=t.length;for(let a=0;a<o;a++)if("<"===t[a]){const h=t.charCodeAt(a+1);if(47===h){const e=dt(t,">",a,"Closing Tag is not closed.");let r=t.substring(a+2,e).trim();if(s.removeNSPrefix){const t=r.indexOf(":");-1!==t&&(r=r.substr(t+1))}r=Nt(s.transformTagName,r,"",s).tagName,n&&(i=this.saveTextToParentTag(i,n,this.readonlyMatcher));const o=this.matcher.getCurrentTag();if(r&&s.unpairedTagsSet.has(r))throw new Error(`Unpaired tag can not be used as closing tag: </${r}>`);o&&s.unpairedTagsSet.has(o)&&(this.matcher.pop(),this.tagsNodeStack.pop()),this.matcher.pop(),this.isCurrentNodeStopNode=!1,n=this.tagsNodeStack.pop(),i="",a=e}else if(63===h){let e=gt(t,a,!1,"?>");if(!e)throw new Error("Pi Tag is not closed.");i=this.saveTextToParentTag(i,n,this.readonlyMatcher);const r=this.buildAttributesMap(e.tagExp,this.matcher,e.tagName,!0);if(r){const t=r[this.options.attributeNamePrefix+"version"];this.entityDecoder.setXmlVersion(Number(t)||1)}if(s.ignoreDeclaration&&"?xml"===e.tagName||s.ignorePiTags);else{const t=new O(e.tagName);t.add(s.textNodeName,""),e.tagName!==e.tagExp&&e.attrExpPresent&&!0!==s.ignoreAttributes&&(t[":@"]=r),this.addChild(n,t,this.readonlyMatcher,a)}a=e.closeIndex+1}else if(33===h&&45===t.charCodeAt(a+2)&&45===t.charCodeAt(a+3)){const e=dt(t,"--\x3e",a+4,"Comment is not closed.");if(s.commentPropName){const r=t.substring(a+4,e-2);i=this.saveTextToParentTag(i,n,this.readonlyMatcher),n.add(s.commentPropName,[{[s.textNodeName]:r}])}a=e}else if(33===h&&68===t.charCodeAt(a+2)){const e=r.readDocType(t,a);this.entityDecoder.addInputEntities(e.entities),a=e.i}else if(33===h&&91===t.charCodeAt(a+2)){const e=dt(t,"]]>",a,"CDATA is not closed.")-2,r=t.substring(a+9,e);i=this.saveTextToParentTag(i,n,this.readonlyMatcher);let o=this.parseTextData(r,n.tagname,this.readonlyMatcher,!0,!1,!0,!0);null==o&&(o=""),s.cdataPropName?n.add(s.cdataPropName,[{[s.textNodeName]:r}]):n.add(s.textNodeName,o),a=e+2}else{let r=gt(t,a,s.removeNSPrefix);if(!r){const e=t.substring(Math.max(0,a-50),Math.min(o,a+50));throw new Error(`readTagExp returned undefined at position ${a}. Context: "${e}"`)}let h=r.tagName;const l=r.rawTagName;let u=r.tagExp,p=r.attrExpPresent,c=r.closeIndex;if(({tagName:h,tagExp:u}=Nt(s.transformTagName,h,u,s)),s.strictReservedNames&&(h===s.commentPropName||h===s.cdataPropName||h===s.textNodeName||h===s.attributesGroupName))throw new Error(`Invalid tag name: ${h}`);n&&i&&"!xml"!==n.tagname&&(i=this.saveTextToParentTag(i,n,this.readonlyMatcher,!1));const d=n;d&&s.unpairedTagsSet.has(d.tagname)&&(n=this.tagsNodeStack.pop(),this.matcher.pop());let f=!1;u.length>0&&u.lastIndexOf("/")===u.length-1&&(f=!0,"/"===h[h.length-1]?(h=h.substr(0,h.length-1),u=h):u=u.substr(0,u.length-1),p=h!==u);let g,m=null,x={};g=nt(l),h!==e.tagname&&this.matcher.push(h,{},g),h!==u&&p&&(m=this.buildAttributesMap(u,this.matcher,h),m&&(x=et(m,s))),h!==e.tagname&&(this.isCurrentNodeStopNode=this.isItStopNode());const N=a;if(this.isCurrentNodeStopNode){let e="";if(f)a=r.closeIndex;else if(s.unpairedTagsSet.has(h))a=r.closeIndex;else{const n=this.readStopNodeData(t,l,c+1);if(!n)throw new Error(`Unexpected end of ${l}`);a=n.i,e=n.tagContent}const i=new O(h);m&&(i[":@"]=m),i.add(s.textNodeName,e),this.matcher.pop(),this.isCurrentNodeStopNode=!1,this.addChild(n,i,this.readonlyMatcher,N)}else{if(f){({tagName:h,tagExp:u}=Nt(s.transformTagName,h,u,s));const t=new O(h);m&&(t[":@"]=m),this.addChild(n,t,this.readonlyMatcher,N),this.matcher.pop(),this.isCurrentNodeStopNode=!1}else{if(s.unpairedTagsSet.has(h)){const t=new O(h);m&&(t[":@"]=m),this.addChild(n,t,this.readonlyMatcher,N),this.matcher.pop(),this.isCurrentNodeStopNode=!1,a=r.closeIndex;continue}{const t=new O(h);if(this.tagsNodeStack.length>s.maxNestedTags)throw new Error("Maximum nested tags exceeded");this.tagsNodeStack.push(n),m&&(t[":@"]=m),this.addChild(n,t,this.readonlyMatcher,N),n=t}}i="",a=c}}}else i+=t[a];return e.child};function lt(t,e,n,i){this.options.captureMetaData||(i=void 0);const s=this.options.jPath?n.toString():n,r=this.options.updateTag(e.tagname,s,e[":@"]);!1===r||("string"==typeof r?(e.tagname=r,t.addChild(e,i)):t.addChild(e,i))}function ut(t,e,n){const i=this.options.processEntities;if(!i||!i.enabled)return t;if(i.allowedTags){const s=this.options.jPath?n.toString():n;if(!(Array.isArray(i.allowedTags)?i.allowedTags.includes(e):i.allowedTags(e,s)))return t}if(i.tagFilter){const s=this.options.jPath?n.toString():n;if(!i.tagFilter(e,s))return t}return this.entityDecoder.decode(t)}function pt(t,e,n,i){return t&&(void 0===i&&(i=0===e.child.length),void 0!==(t=this.parseTextData(t,e.tagname,n,!1,!!e[":@"]&&0!==Object.keys(e[":@"]).length,i))&&""!==t&&e.add(this.options.textNodeName,t),t=""),t}function ct(){return 0!==this.stopNodeExpressionsSet.size&&this.matcher.matchesAny(this.stopNodeExpressionsSet)}function dt(t,e,n,i){const s=t.indexOf(e,n);if(-1===s)throw new Error(i);return s+e.length-1}function ft(t,e,n,i){const s=t.indexOf(e,n);if(-1===s)throw new Error(i);return s}function gt(t,e,n,i=">"){const s=function(t,e,n=">"){let i=0;const s=t.length,r=n.charCodeAt(0),o=n.length>1?n.charCodeAt(1):-1;let a="",h=e;for(let n=e;n<s;n++){const e=t.charCodeAt(n);if(i)e===i&&(i=0);else if(34===e||39===e)i=e;else if(e===r){if(-1===o)return a+=t.substring(h,n),{data:a,index:n};if(t.charCodeAt(n+1)===o)return a+=t.substring(h,n),{data:a,index:n}}else 9!==e||i||(a+=t.substring(h,n)+" ",h=n+1)}}(t,e+1,i);if(!s)return;let r=s.data;const o=s.index,a=r.search(/\s/);let h=r,l=!0;-1!==a&&(h=r.substring(0,a),r=r.substring(a+1).trimStart());const u=h;if(n){const t=h.indexOf(":");-1!==t&&(h=h.substr(t+1),l=h!==s.data.substr(t+1))}return{tagName:h,tagExp:r,closeIndex:o,attrExpPresent:l,rawTagName:u}}function mt(t,e,n){const i=n;let s=1;const r=t.length;for(;n<r;n++)if("<"===t[n]){const r=t.charCodeAt(n+1);if(47===r){const r=ft(t,">",n,`${e} is not closed`);if(t.substring(n+2,r).trim()===e&&(s--,0===s))return{tagContent:t.substring(i,n),i:r};n=r}else if(63===r)n=dt(t,"?>",n+1,"StopNode is not closed.");else if(33===r&&45===t.charCodeAt(n+2)&&45===t.charCodeAt(n+3))n=dt(t,"--\x3e",n+3,"StopNode is not closed.");else if(33===r&&91===t.charCodeAt(n+2))n=dt(t,"]]>",n,"StopNode is not closed.")-2;else{const i=gt(t,n,!1);i&&((i&&i.tagName)===e&&"/"!==i.tagExp[i.tagExp.length-1]&&s++,n=i.closeIndex)}}}function xt(t,e,n){if(e&&"string"==typeof t){const e=t.trim();return"true"===e||"false"!==e&&function(t,e={}){if(e=Object.assign({},L,e),!t||"string"!=typeof t)return t;let n=t.trim();if(0===n.length)return t;if(void 0!==e.skipLike&&e.skipLike.test(n))return t;if("0"===n)return 0;if(e.hex&&j.test(n))return function(t){if(parseInt)return parseInt(t,16);if(Number.parseInt)return Number.parseInt(t,16);if(window&&window.parseInt)return window.parseInt(t,16);throw new Error("parseInt, Number.parseInt, window.parseInt are not supported")}(n);if(isFinite(n)){if(n.includes("e")||n.includes("E"))return function(t,e,n){if(!n.eNotation)return t;const i=e.match(k);if(i){let s=i[1]||"";const r=-1===i[3].indexOf("e")?"E":"e",o=i[2],a=s?t[o.length+1]===r:t[o.length]===r;return o.length>1&&a?t:(1!==o.length||!i[3].startsWith(`.${r}`)&&i[3][0]!==r)&&o.length>0?n.leadingZeros&&!a?(e=(i[1]||"")+i[3],Number(e)):t:Number(e)}return t}(t,n,e);{const s=V.exec(n);if(s){const r=s[1]||"",o=s[2];let a=(i=s[3])&&-1!==i.indexOf(".")?("."===(i=i.replace(/0+$/,""))?i="0":"."===i[0]?i="0"+i:"."===i[i.length-1]&&(i=i.substring(0,i.length-1)),i):i;const h=r?"."===t[o.length+1]:"."===t[o.length];if(!e.leadingZeros&&(o.length>1||1===o.length&&!h))return t;{const i=Number(n),s=String(i);if(0===i)return i;if(-1!==s.search(/[eE]/))return e.eNotation?i:t;if(-1!==n.indexOf("."))return"0"===s||s===a||s===`${r}${a}`?i:t;let h=o?a:n;return o?h===s||r+h===s?i:t:h===s||h===r+s?i:t}}return t}}var i;return function(t,e,n){const i=e===1/0;switch(n.infinity.toLowerCase()){case"null":return null;case"infinity":return e;case"string":return i?"Infinity":"-Infinity";default:return t}}(t,Number(n),e)}(t,n)}return void 0!==t?t:""}function Nt(t,e,n,i){if(t){const i=t(e);n===e&&(n=i),e=i}return{tagName:e=bt(e,i),tagExp:n}}function bt(t,e){if(a.includes(t))throw new Error(`[SECURITY] Invalid name: "${t}" is a reserved JavaScript keyword that could cause prototype pollution`);return o.includes(t)?e.onDangerousProperty(t):t}const yt=O.getMetaDataSymbol();function Et(t,e){if(!t||"object"!=typeof t)return{};if(!e)return t;const n={};for(const i in t)i.startsWith(e)?n[i.substring(e.length)]=t[i]:n[i]=t[i];return n}function wt(t,e,n,i){return vt(t,e,n,i)}function vt(t,e,n,i){let s;const r={};for(let o=0;o<t.length;o++){const a=t[o],h=St(a);if(void 0!==h&&h!==e.textNodeName){const t=Et(a[":@"]||{},e.attributeNamePrefix);n.push(h,t)}if(h===e.textNodeName)void 0===s?s=a[h]:s+=""+a[h];else{if(void 0===h)continue;if(a[h]){let t=vt(a[h],e,n,i);const s=At(t,e);if(0===Object.keys(t).length&&e.alwaysCreateTextNode&&(t[e.textNodeName]=""),a[":@"]?_t(t,a[":@"],i,e):1!==Object.keys(t).length||void 0===t[e.textNodeName]||e.alwaysCreateTextNode?0===Object.keys(t).length&&(e.alwaysCreateTextNode?t[e.textNodeName]="":t=""):t=t[e.textNodeName],void 0!==a[yt]&&"object"==typeof t&&null!==t&&(t[yt]=a[yt]),void 0!==r[h]&&Object.prototype.hasOwnProperty.call(r,h))Array.isArray(r[h])||(r[h]=[r[h]]),r[h].push(t);else{const n=e.jPath?i.toString():i;e.isArray(h,n,s)?r[h]=[t]:r[h]=t}void 0!==h&&h!==e.textNodeName&&n.pop()}}}return"string"==typeof s?s.length>0&&(r[e.textNodeName]=s):void 0!==s&&(r[e.textNodeName]=s),r}function St(t){const e=Object.keys(t);for(let t=0;t<e.length;t++){const n=e[t];if(":@"!==n)return n}}function _t(t,e,n,i){if(e){const s=Object.keys(e),r=s.length;for(let o=0;o<r;o++){const r=s[o],a=r.startsWith(i.attributeNamePrefix)?r.substring(i.attributeNamePrefix.length):r,h=i.jPath?n.toString()+"."+a:n;i.isArray(r,h,!0,!0)?t[r]=[e[r]]:t[r]=e[r]}}}function At(t,e){const{textNodeName:n}=e,i=Object.keys(t).length;return 0===i||!(1!==i||!t[n]&&"boolean"!=typeof t[n]&&0!==t[n])}class Tt{constructor(t){this.externalEntities={},this.options=C(t)}parse(t,e){if("string"!=typeof t&&t.toString)t=t.toString();else if("string"!=typeof t)throw new Error("XML data is accepted in String or Bytes[] form.");if(e){!0===e&&(e={});const n=l(t,e);if(!0!==n)throw Error(`${n.err.msg}:${n.err.line}:${n.err.col}`)}const n=new it(this.options,this.externalEntities),i=n.parseXml(t);return this.options.preserveOrder||void 0===i?i:wt(i,this.options,n.matcher,n.readonlyMatcher)}addEntity(t,e){if(-1!==e.indexOf("&"))throw new Error("Entity value can't have '&'");if(-1!==t.indexOf("&")||-1!==t.indexOf(";"))throw new Error("An entity must be set without '&' and ';'. Eg. use '#xD' for '&#xD;'");if("&"===e)throw new Error("An entity with value '&' is not permitted");this.externalEntities[t]=e}static getMetaDataSymbol(){return O.getMetaDataSymbol()}}function Ct(t){return String(t).replace(/--/g,"- -").replace(/--/g,"- -").replace(/-$/,"- ")}function Pt(t){return String(t).replace(/\]\]>/g,"]]]]><![CDATA[>")}function Ot(t){return String(t).replace(/"/g,"&quot;").replace(/'/g,"&apos;")}function $t(t,e){let n="";e.format&&e.indentBy.length>0&&(n="\n");const i=[];if(e.stopNodes&&Array.isArray(e.stopNodes))for(let t=0;t<e.stopNodes.length;t++){const n=e.stopNodes[t];"string"==typeof n?i.push(new G(n)):n instanceof G&&i.push(n)}return It(t,e,n,new R,i)}function It(t,e,n,i,s){let r="",o=!1;if(e.maxNestedTags&&i.getDepth()>e.maxNestedTags)throw new Error("Maximum nested tags exceeded");if(!Array.isArray(t)){if(null!=t){let n=t.toString();return n=Ft(n,e),n}return""}for(let a=0;a<t.length;a++){const h=t[a],l=Vt(h);if(void 0===l)continue;const u=Dt(h[":@"],e);i.push(l,u);const p=kt(i,s);if(l===e.textNodeName){let t=h[l];p||(t=e.tagValueProcessor(l,t),t=Ft(t,e)),o&&(r+=n),r+=t,o=!1,i.pop();continue}if(l===e.cdataPropName){o&&(r+=n),r+=`<![CDATA[${Pt(h[l][0][e.textNodeName])}]]>`,o=!1,i.pop();continue}if(l===e.commentPropName){r+=n+`\x3c!--${Ct(h[l][0][e.textNodeName])}--\x3e`,o=!0,i.pop();continue}if("?"===l[0]){const t=Lt(h[":@"],e,p),s="?xml"===l?"":n;let a=h[l][0][e.textNodeName];a=0!==a.length?" "+a:"",r+=s+`<${l}${a}${t}?>`,o=!0,i.pop();continue}let c=n;""!==c&&(c+=e.indentBy);const d=n+`<${l}${Lt(h[":@"],e,p)}`;let f;f=p?Mt(h[l],e):It(h[l],e,c,i,s),-1!==e.unpairedTags.indexOf(l)?e.suppressUnpairedNode?r+=d+">":r+=d+"/>":f&&0!==f.length||!e.suppressEmptyNode?f&&f.endsWith(">")?r+=d+`>${f}${n}</${l}>`:(r+=d+">",f&&""!==n&&(f.includes("/>")||f.includes("</"))?r+=n+e.indentBy+f+n:r+=f,r+=`</${l}>`):r+=d+"/>",o=!0,i.pop()}return r}function Dt(t,e){if(!t||e.ignoreAttributes)return null;const n={};let i=!1;for(let s in t)Object.prototype.hasOwnProperty.call(t,s)&&(n[s.startsWith(e.attributeNamePrefix)?s.substr(e.attributeNamePrefix.length):s]=Ot(t[s]),i=!0);return i?n:null}function Mt(t,e){if(!Array.isArray(t))return null!=t?t.toString():"";let n="";for(let i=0;i<t.length;i++){const s=t[i],r=Vt(s);if(r===e.textNodeName)n+=s[r];else if(r===e.cdataPropName)n+=s[r][0][e.textNodeName];else if(r===e.commentPropName)n+=s[r][0][e.textNodeName];else{if(r&&"?"===r[0])continue;if(r){const t=jt(s[":@"],e),i=Mt(s[r],e);i&&0!==i.length?n+=`<${r}${t}>${i}</${r}>`:n+=`<${r}${t}/>`}}}return n}function jt(t,e){let n="";if(t&&!e.ignoreAttributes)for(let i in t){if(!Object.prototype.hasOwnProperty.call(t,i))continue;let s=t[i];!0===s&&e.suppressBooleanAttributes?n+=` ${i.substr(e.attributeNamePrefix.length)}`:n+=` ${i.substr(e.attributeNamePrefix.length)}="${Ot(s)}"`}return n}function Vt(t){const e=Object.keys(t);for(let n=0;n<e.length;n++){const i=e[n];if(Object.prototype.hasOwnProperty.call(t,i)&&":@"!==i)return i}}function Lt(t,e,n){let i="";if(t&&!e.ignoreAttributes)for(let s in t){if(!Object.prototype.hasOwnProperty.call(t,s))continue;let r;n?r=t[s]:(r=e.attributeValueProcessor(s,t[s]),r=Ft(r,e)),!0===r&&e.suppressBooleanAttributes?i+=` ${s.substr(e.attributeNamePrefix.length)}`:i+=` ${s.substr(e.attributeNamePrefix.length)}="${Ot(r)}"`}return i}function kt(t,e){if(!e||0===e.length)return!1;for(let n=0;n<e.length;n++)if(t.matches(e[n]))return!0;return!1}function Ft(t,e){if(t&&t.length>0&&e.processEntities)for(let n=0;n<e.entities.length;n++){const i=e.entities[n];t=t.replace(i.regex,i.val)}return t}const Rt={attributeNamePrefix:"@_",attributesGroupName:!1,textNodeName:"#text",ignoreAttributes:!0,cdataPropName:!1,format:!1,indentBy:"  ",suppressEmptyNode:!1,suppressUnpairedNode:!0,suppressBooleanAttributes:!0,tagValueProcessor:function(t,e){return e},attributeValueProcessor:function(t,e){return e},preserveOrder:!1,commentPropName:!1,unpairedTags:[],entities:[{regex:new RegExp("&","g"),val:"&amp;"},{regex:new RegExp(">","g"),val:"&gt;"},{regex:new RegExp("<","g"),val:"&lt;"},{regex:new RegExp("'","g"),val:"&apos;"},{regex:new RegExp('"',"g"),val:"&quot;"}],processEntities:!0,stopNodes:[],oneListGroup:!1,maxNestedTags:100,jPath:!0};function Gt(t){if(this.options=Object.assign({},Rt,t),this.options.stopNodes&&Array.isArray(this.options.stopNodes)&&(this.options.stopNodes=this.options.stopNodes.map(t=>"string"==typeof t&&t.startsWith("*.")?".."+t.substring(2):t)),this.stopNodeExpressions=[],this.options.stopNodes&&Array.isArray(this.options.stopNodes))for(let t=0;t<this.options.stopNodes.length;t++){const e=this.options.stopNodes[t];"string"==typeof e?this.stopNodeExpressions.push(new G(e)):e instanceof G&&this.stopNodeExpressions.push(e)}var e;!0===this.options.ignoreAttributes||this.options.attributesGroupName?this.isAttribute=function(){return!1}:(this.ignoreAttributesFn="function"==typeof(e=this.options.ignoreAttributes)?e:Array.isArray(e)?t=>{for(const n of e){if("string"==typeof n&&t===n)return!0;if(n instanceof RegExp&&n.test(t))return!0}}:()=>!1,this.attrPrefixLen=this.options.attributeNamePrefix.length,this.isAttribute=Wt),this.processTextOrObjNode=Bt,this.options.format?(this.indentate=Ut,this.tagEndChar=">\n",this.newLine="\n"):(this.indentate=function(){return""},this.tagEndChar=">",this.newLine="")}function Bt(t,e,n,i){const s=this.extractAttributes(t);if(i.push(e,s),this.checkStopNode(i)){const s=this.buildRawContent(t),r=this.buildAttributesForStopNode(t);return i.pop(),this.buildObjectNode(s,e,r,n)}const r=this.j2x(t,n+1,i);return i.pop(),void 0!==t[this.options.textNodeName]&&1===Object.keys(t).length?this.buildTextValNode(t[this.options.textNodeName],e,r.attrStr,n,i):this.buildObjectNode(r.val,e,r.attrStr,n)}function Ut(t){return this.options.indentBy.repeat(t)}function Wt(t){return!(!t.startsWith(this.options.attributeNamePrefix)||t===this.options.textNodeName)&&t.substr(this.attrPrefixLen)}Gt.prototype.build=function(t){if(this.options.preserveOrder)return $t(t,this.options);{Array.isArray(t)&&this.options.arrayNodeName&&this.options.arrayNodeName.length>1&&(t={[this.options.arrayNodeName]:t});const e=new R;return this.j2x(t,0,e).val}},Gt.prototype.j2x=function(t,e,n){let i="",s="";if(this.options.maxNestedTags&&n.getDepth()>=this.options.maxNestedTags)throw new Error("Maximum nested tags exceeded");const r=this.options.jPath?n.toString():n,o=this.checkStopNode(n);for(let a in t)if(Object.prototype.hasOwnProperty.call(t,a))if(void 0===t[a])this.isAttribute(a)&&(s+="");else if(null===t[a])this.isAttribute(a)||a===this.options.cdataPropName||a===this.options.commentPropName?s+="":"?"===a[0]?s+=this.indentate(e)+"<"+a+"?"+this.tagEndChar:s+=this.indentate(e)+"<"+a+"/"+this.tagEndChar;else if(t[a]instanceof Date)s+=this.buildTextValNode(t[a],a,"",e,n);else if("object"!=typeof t[a]){const h=this.isAttribute(a);if(h&&!this.ignoreAttributesFn(h,r))i+=this.buildAttrPairStr(h,""+t[a],o);else if(!h)if(a===this.options.textNodeName){let e=this.options.tagValueProcessor(a,""+t[a]);s+=this.replaceEntitiesValue(e)}else{n.push(a);const i=this.checkStopNode(n);if(n.pop(),i){const n=""+t[a];s+=""===n?this.indentate(e)+"<"+a+this.closeTag(a)+this.tagEndChar:this.indentate(e)+"<"+a+">"+n+"</"+a+this.tagEndChar}else s+=this.buildTextValNode(t[a],a,"",e,n)}}else if(Array.isArray(t[a])){const i=t[a].length;let r="",o="";for(let h=0;h<i;h++){const i=t[a][h];if(void 0===i);else if(null===i)"?"===a[0]?s+=this.indentate(e)+"<"+a+"?"+this.tagEndChar:s+=this.indentate(e)+"<"+a+"/"+this.tagEndChar;else if("object"==typeof i)if(this.options.oneListGroup){n.push(a);const t=this.j2x(i,e+1,n);n.pop(),r+=t.val,this.options.attributesGroupName&&i.hasOwnProperty(this.options.attributesGroupName)&&(o+=t.attrStr)}else r+=this.processTextOrObjNode(i,a,e,n);else if(this.options.oneListGroup){let t=this.options.tagValueProcessor(a,i);t=this.replaceEntitiesValue(t),r+=t}else{n.push(a);const t=this.checkStopNode(n);if(n.pop(),t){const t=""+i;r+=""===t?this.indentate(e)+"<"+a+this.closeTag(a)+this.tagEndChar:this.indentate(e)+"<"+a+">"+t+"</"+a+this.tagEndChar}else r+=this.buildTextValNode(i,a,"",e,n)}}this.options.oneListGroup&&(r=this.buildObjectNode(r,a,o,e)),s+=r}else if(this.options.attributesGroupName&&a===this.options.attributesGroupName){const e=Object.keys(t[a]),n=e.length;for(let s=0;s<n;s++)i+=this.buildAttrPairStr(e[s],""+t[a][e[s]],o)}else s+=this.processTextOrObjNode(t[a],a,e,n);return{attrStr:i,val:s}},Gt.prototype.buildAttrPairStr=function(t,e,n){return n||(e=this.options.attributeValueProcessor(t,""+e),e=this.replaceEntitiesValue(e)),this.options.suppressBooleanAttributes&&"true"===e?" "+t:" "+t+'="'+Ot(e)+'"'},Gt.prototype.extractAttributes=function(t){if(!t||"object"!=typeof t)return null;const e={};let n=!1;if(this.options.attributesGroupName&&t[this.options.attributesGroupName]){const i=t[this.options.attributesGroupName];for(let t in i)Object.prototype.hasOwnProperty.call(i,t)&&(e[t.startsWith(this.options.attributeNamePrefix)?t.substring(this.options.attributeNamePrefix.length):t]=Ot(i[t]),n=!0)}else for(let i in t){if(!Object.prototype.hasOwnProperty.call(t,i))continue;const s=this.isAttribute(i);s&&(e[s]=Ot(t[i]),n=!0)}return n?e:null},Gt.prototype.buildRawContent=function(t){if("string"==typeof t)return t;if("object"!=typeof t||null===t)return String(t);if(void 0!==t[this.options.textNodeName])return t[this.options.textNodeName];let e="";for(let n in t){if(!Object.prototype.hasOwnProperty.call(t,n))continue;if(this.isAttribute(n))continue;if(this.options.attributesGroupName&&n===this.options.attributesGroupName)continue;const i=t[n];if(n===this.options.textNodeName)e+=i;else if(Array.isArray(i)){for(let t of i)if("string"==typeof t||"number"==typeof t)e+=`<${n}>${t}</${n}>`;else if("object"==typeof t&&null!==t){const i=this.buildRawContent(t),s=this.buildAttributesForStopNode(t);e+=""===i?`<${n}${s}/>`:`<${n}${s}>${i}</${n}>`}}else if("object"==typeof i&&null!==i){const t=this.buildRawContent(i),s=this.buildAttributesForStopNode(i);e+=""===t?`<${n}${s}/>`:`<${n}${s}>${t}</${n}>`}else e+=`<${n}>${i}</${n}>`}return e},Gt.prototype.buildAttributesForStopNode=function(t){if(!t||"object"!=typeof t)return"";let e="";if(this.options.attributesGroupName&&t[this.options.attributesGroupName]){const n=t[this.options.attributesGroupName];for(let t in n){if(!Object.prototype.hasOwnProperty.call(n,t))continue;const i=t.startsWith(this.options.attributeNamePrefix)?t.substring(this.options.attributeNamePrefix.length):t,s=n[t];!0===s&&this.options.suppressBooleanAttributes?e+=" "+i:e+=" "+i+'="'+s+'"'}}else for(let n in t){if(!Object.prototype.hasOwnProperty.call(t,n))continue;const i=this.isAttribute(n);if(i){const s=t[n];!0===s&&this.options.suppressBooleanAttributes?e+=" "+i:e+=" "+i+'="'+s+'"'}}return e},Gt.prototype.buildObjectNode=function(t,e,n,i){if(""===t)return"?"===e[0]?this.indentate(i)+"<"+e+n+"?"+this.tagEndChar:this.indentate(i)+"<"+e+n+this.closeTag(e)+this.tagEndChar;{let s="</"+e+this.tagEndChar,r="";return"?"===e[0]&&(r="?",s=""),!n&&""!==n||-1!==t.indexOf("<")?!1!==this.options.commentPropName&&e===this.options.commentPropName&&0===r.length?this.indentate(i)+`\x3c!--${t}--\x3e`+this.newLine:this.indentate(i)+"<"+e+n+r+this.tagEndChar+t+this.indentate(i)+s:this.indentate(i)+"<"+e+n+r+">"+t+s}},Gt.prototype.closeTag=function(t){let e="";return-1!==this.options.unpairedTags.indexOf(t)?this.options.suppressUnpairedNode||(e="/"):e=this.options.suppressEmptyNode?"/":`></${t}`,e},Gt.prototype.checkStopNode=function(t){if(!this.stopNodeExpressions||0===this.stopNodeExpressions.length)return!1;for(let e=0;e<this.stopNodeExpressions.length;e++)if(t.matches(this.stopNodeExpressions[e]))return!0;return!1},Gt.prototype.buildTextValNode=function(t,e,n,i,s){if(!1!==this.options.cdataPropName&&e===this.options.cdataPropName){const e=Pt(t);return this.indentate(i)+`<![CDATA[${e}]]>`+this.newLine}if(!1!==this.options.commentPropName&&e===this.options.commentPropName){const e=Ct(t);return this.indentate(i)+`\x3c!--${e}--\x3e`+this.newLine}if("?"===e[0])return this.indentate(i)+"<"+e+n+"?"+this.tagEndChar;{let s=this.options.tagValueProcessor(e,t);return s=this.replaceEntitiesValue(s),""===s?this.indentate(i)+"<"+e+n+this.closeTag(e)+this.tagEndChar:this.indentate(i)+"<"+e+n+">"+s+"</"+e+this.tagEndChar}},Gt.prototype.replaceEntitiesValue=function(t){if(t&&t.length>0&&this.options.processEntities)for(let e=0;e<this.options.entities.length;e++){const n=this.options.entities[e];t=t.replace(n.regex,n.val)}return t};const Xt=Gt,Yt={validate:l};module.exports=e})();
 
 /***/ }),
 
@@ -50475,7 +50979,7 @@ module.exports = parseParams
 /***/ ((module) => {
 
 "use strict";
-module.exports = /*#__PURE__*/JSON.parse('{"name":"@aws-sdk/client-ecs","description":"AWS SDK for JavaScript Ecs Client for Node.js, Browser and React Native","version":"3.956.0","scripts":{"build":"concurrently \'yarn:build:types\' \'yarn:build:es\' && yarn build:cjs","build:cjs":"node ../../scripts/compilation/inline client-ecs","build:es":"tsc -p tsconfig.es.json","build:include:deps":"lerna run --scope $npm_package_name --include-dependencies build","build:types":"tsc -p tsconfig.types.json","build:types:downlevel":"downlevel-dts dist-types dist-types/ts3.4","clean":"rimraf ./dist-* && rimraf *.tsbuildinfo","extract:docs":"api-extractor run --local","generate:client":"node ../../scripts/generate-clients/single-service --solo ecs","test:index":"tsc --noEmit ./test/index-types.ts && node ./test/index-objects.spec.mjs"},"main":"./dist-cjs/index.js","types":"./dist-types/index.d.ts","module":"./dist-es/index.js","sideEffects":false,"dependencies":{"@aws-crypto/sha256-browser":"5.2.0","@aws-crypto/sha256-js":"5.2.0","@aws-sdk/core":"3.956.0","@aws-sdk/credential-provider-node":"3.956.0","@aws-sdk/middleware-host-header":"3.956.0","@aws-sdk/middleware-logger":"3.956.0","@aws-sdk/middleware-recursion-detection":"3.956.0","@aws-sdk/middleware-user-agent":"3.956.0","@aws-sdk/region-config-resolver":"3.956.0","@aws-sdk/types":"3.956.0","@aws-sdk/util-endpoints":"3.956.0","@aws-sdk/util-user-agent-browser":"3.956.0","@aws-sdk/util-user-agent-node":"3.956.0","@smithy/config-resolver":"^4.4.5","@smithy/core":"^3.20.0","@smithy/fetch-http-handler":"^5.3.8","@smithy/hash-node":"^4.2.7","@smithy/invalid-dependency":"^4.2.7","@smithy/middleware-content-length":"^4.2.7","@smithy/middleware-endpoint":"^4.4.1","@smithy/middleware-retry":"^4.4.17","@smithy/middleware-serde":"^4.2.8","@smithy/middleware-stack":"^4.2.7","@smithy/node-config-provider":"^4.3.7","@smithy/node-http-handler":"^4.4.7","@smithy/protocol-http":"^5.3.7","@smithy/smithy-client":"^4.10.2","@smithy/types":"^4.11.0","@smithy/url-parser":"^4.2.7","@smithy/util-base64":"^4.3.0","@smithy/util-body-length-browser":"^4.2.0","@smithy/util-body-length-node":"^4.2.1","@smithy/util-defaults-mode-browser":"^4.3.16","@smithy/util-defaults-mode-node":"^4.2.19","@smithy/util-endpoints":"^3.2.7","@smithy/util-middleware":"^4.2.7","@smithy/util-retry":"^4.2.7","@smithy/util-utf8":"^4.2.0","@smithy/util-waiter":"^4.2.7","tslib":"^2.6.2"},"devDependencies":{"@tsconfig/node18":"18.2.4","@types/node":"^18.19.69","concurrently":"7.0.0","downlevel-dts":"0.10.1","rimraf":"3.0.2","typescript":"~5.8.3"},"engines":{"node":">=18.0.0"},"typesVersions":{"<4.0":{"dist-types/*":["dist-types/ts3.4/*"]}},"files":["dist-*/**"],"author":{"name":"AWS SDK for JavaScript Team","url":"https://aws.amazon.com/javascript/"},"license":"Apache-2.0","browser":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.browser"},"react-native":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.native"},"homepage":"https://github.com/aws/aws-sdk-js-v3/tree/main/clients/client-ecs","repository":{"type":"git","url":"https://github.com/aws/aws-sdk-js-v3.git","directory":"clients/client-ecs"}}');
+module.exports = /*#__PURE__*/JSON.parse('{"name":"@aws-sdk/client-ecs","description":"AWS SDK for JavaScript Ecs Client for Node.js, Browser and React Native","version":"3.987.0","scripts":{"build":"concurrently \'yarn:build:types\' \'yarn:build:es\' && yarn build:cjs","build:cjs":"node ../../scripts/compilation/inline client-ecs","build:es":"tsc -p tsconfig.es.json","build:include:deps":"yarn g:turbo run build -F=\\"$npm_package_name\\"","build:types":"tsc -p tsconfig.types.json","build:types:downlevel":"downlevel-dts dist-types dist-types/ts3.4","clean":"premove dist-cjs dist-es dist-types tsconfig.cjs.tsbuildinfo tsconfig.es.tsbuildinfo tsconfig.types.tsbuildinfo","extract:docs":"api-extractor run --local","generate:client":"node ../../scripts/generate-clients/single-service --solo ecs","test:e2e":"yarn g:vitest run -c vitest.config.e2e.mts --mode development","test:e2e:watch":"yarn g:vitest watch -c vitest.config.e2e.mts","test:index":"tsc --noEmit ./test/index-types.ts && node ./test/index-objects.spec.mjs"},"main":"./dist-cjs/index.js","types":"./dist-types/index.d.ts","module":"./dist-es/index.js","sideEffects":false,"dependencies":{"@aws-crypto/sha256-browser":"5.2.0","@aws-crypto/sha256-js":"5.2.0","@aws-sdk/core":"^3.973.7","@aws-sdk/credential-provider-node":"^3.972.6","@aws-sdk/middleware-host-header":"^3.972.3","@aws-sdk/middleware-logger":"^3.972.3","@aws-sdk/middleware-recursion-detection":"^3.972.3","@aws-sdk/middleware-user-agent":"^3.972.7","@aws-sdk/region-config-resolver":"^3.972.3","@aws-sdk/types":"^3.973.1","@aws-sdk/util-endpoints":"3.987.0","@aws-sdk/util-user-agent-browser":"^3.972.3","@aws-sdk/util-user-agent-node":"^3.972.5","@smithy/config-resolver":"^4.4.6","@smithy/core":"^3.22.1","@smithy/fetch-http-handler":"^5.3.9","@smithy/hash-node":"^4.2.8","@smithy/invalid-dependency":"^4.2.8","@smithy/middleware-content-length":"^4.2.8","@smithy/middleware-endpoint":"^4.4.13","@smithy/middleware-retry":"^4.4.30","@smithy/middleware-serde":"^4.2.9","@smithy/middleware-stack":"^4.2.8","@smithy/node-config-provider":"^4.3.8","@smithy/node-http-handler":"^4.4.9","@smithy/protocol-http":"^5.3.8","@smithy/smithy-client":"^4.11.2","@smithy/types":"^4.12.0","@smithy/url-parser":"^4.2.8","@smithy/util-base64":"^4.3.0","@smithy/util-body-length-browser":"^4.2.0","@smithy/util-body-length-node":"^4.2.1","@smithy/util-defaults-mode-browser":"^4.3.29","@smithy/util-defaults-mode-node":"^4.2.32","@smithy/util-endpoints":"^3.2.8","@smithy/util-middleware":"^4.2.8","@smithy/util-retry":"^4.2.8","@smithy/util-utf8":"^4.2.0","@smithy/util-waiter":"^4.2.8","tslib":"^2.6.2"},"devDependencies":{"@tsconfig/node20":"20.1.8","@types/node":"^20.14.8","concurrently":"7.0.0","downlevel-dts":"0.10.1","premove":"4.0.0","typescript":"~5.8.3"},"engines":{"node":">=20.0.0"},"typesVersions":{"<4.0":{"dist-types/*":["dist-types/ts3.4/*"]}},"files":["dist-*/**"],"author":{"name":"AWS SDK for JavaScript Team","url":"https://aws.amazon.com/javascript/"},"license":"Apache-2.0","browser":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.browser"},"react-native":{"./dist-es/runtimeConfig":"./dist-es/runtimeConfig.native"},"homepage":"https://github.com/aws/aws-sdk-js-v3/tree/main/clients/client-ecs","repository":{"type":"git","url":"https://github.com/aws/aws-sdk-js-v3.git","directory":"clients/client-ecs"}}');
 
 /***/ })
 
